@@ -1,0 +1,36 @@
+api start point: 
+    [api-root] = https://meetus01.herokuapp.com/api
+    [api-root] = http://localhost:3000/api
+1. get all users:
+    [api-root]/user
+2. get all event: (to be improved)
+    [api-root]/group
+3. register: Post via body
+    [api-root]/user/register
+    METHOD: POST
+    body=
+        {   
+            "email":"user4@gmail.com",
+            "password":"111",
+            "name":"",
+            "loc": [],
+            "groupCodes": []  
+        }
+    RETURN:
+        for connection broken: {"err":vars.MSG.ERROR_CONNECTION,"data":null}
+        for email already used: {"err":vars.MSG.ERROR_EMAIL_DUPLICATED, "data":null}
+        for database issue: {"err":vars.MSG.ERROR_OPERATION, "data":null}
+        for success: {"err":null,"data":data} // data is user data
+
+4. login:  Post via url or body
+   4.1 login via url
+    [api-root]/user/login?email=panyunkui2@gmail.com&password=111
+    METHOD: POST
+    Return:
+        for connection broken: {"err":err,"data":null}
+        for connection OK, data not found: {"err":"User not found","data":null}
+        for success: {"err":null,"data":data}  // data is user data
+    4.2 login via requestBody
+    [api-root]/user/login
+    body={"email":"panyunkui2@gmail.com", "password":"111"}
+    

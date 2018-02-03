@@ -1,0 +1,23 @@
+{
+  "name": "meetup",
+  "version": "1.0.0",
+  "description": "Nodejs server in order to save and process user data(gps and more) to/from mongodb(will try to use mongodb cloud), and response to android phone",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "mongodb",
+    "express",
+    "android"
+  ],
+  "author": "Yun Kui Pan",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "gps-distance": "0.0.4",
+    "mongoose": "^4.11.10"
+  }
+}
