@@ -3,7 +3,7 @@
 const vars = require('../config/vars');
 const mongoose = require('mongoose');
 const Event = require('./event');
-const Lib = require('../Lib/lib1');
+const Lib = require('../lib/lib1');
 const UserSchema = mongoose.Schema({
     email:{type:String, require:true},
     password:{type:String, require:true},
