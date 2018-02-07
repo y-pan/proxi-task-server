@@ -1,5 +1,7 @@
 module.exports = {
-    isDbLocal:false,    
+    isMDbLocal:false,       
+    isRunningLodal:true,  /** running local => firebase use secret json file */
+    db_local_conn:'mongodb://localhost:27017/proxi-task-mdb',   
     port:3000,
     msgCode:{
         notConnected:0,
@@ -28,7 +30,6 @@ module.exports = {
 
         SUCCESS:"Operation done sucessfully"
     }
- 
 }
 
 // isDbLocal => use local mongodb, otherwise use cloud mongodb

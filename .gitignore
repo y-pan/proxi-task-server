@@ -1,7 +1,4 @@
 node_modules/
-/node_modules/
+config/secret/
 myData_ignore/
-/myData_ignore/
-/config/secret.js
-config/secret.js
 .DS_store

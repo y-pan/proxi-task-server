@@ -1,4 +1,5 @@
-
+const vars = require('../config/vars');
+const self = module.exports;
 module.exports.calCulateDistance = (lat1, lon1, lat2, lon2, unit) => {
 	var radlat1 = Math.PI * lat1/180
 	var radlat2 = Math.PI * lat2/180
@@ -26,4 +27,54 @@ module.exports.getDistanceFromLatLonInMeter = (lat1,lon1,lat2,lon2) =>{
     var d = R * c * 1000; // Distance in meter
     return d;
 }
-  
+module.exports.getSecret = () =>{  // secret.js file 
+	let sec = require('../config/secret/secret');
+	return sec;
+}
+module.exports.getMDb = () =>{
+	if(vars.isMDbLocal == true){
+		return vars.db_local_conn;
+	}else{
+		if(vars.isRunningLodal == true){
+			return self.getSecret().mlab_conn;
+		}else{
+			return process.env.mlab_conn;
+		}
+	}
+}
+module.exports.getMDbType = () =>{
+	if(vars.isMDbLocal == true){
+		return "LOCAL";
+	}else{
+		return "CLOUD";
+	}
+}
+
+module.exports.getFbDatabaseURL = ()=>{
+	if(vars.isRunningLodal){
+		return self.getSecret().fb_databaseURL;
+	}else{
+		return process.env.fb_databaseURL;
+	}
+}
+module.exports.getFbServiceAccount = () =>{
+	if(vars.isRunningLodal){
+		// local : local account json file
+		return require("../config/secret/proxi-task-db-firebase-adminsdk-ml7rx-97d42c4d32.json");
+	}else{
+		// cloud : use env
+		let acc = {
+			"type": process.env.fb_type,
+			"project_id": process.env.fb_project_id,
+			"private_key_id": process.env.fb_private_key_id,
+			"private_key": process.env.fb_private_key,
+			"client_email": process.env.fb_client_email,
+			"client_id": process.env.fb_client_id,
+			"auth_uri": process.env.fb_auth_uri,
+			"token_uri": process.env.fb_token_uri,
+			"auth_provider_x509_cert_url": process.env.fb_auth_provider_x509_cert_url,
+			"client_x509_cert_url": process.env.fb_client_x509_cert_url
+		  }
+		  return acc;
+	}
+}

@@ -1,17 +1,42 @@
 const vars = require('../config/vars');
-const secret = require('../config/secret');          // secret info like db connection(has username and pass)
-const lib = require('../Lib/lib1');
+// const secret = require('../config/secret/secret');          // secret info like db connection(has username and pass)
+const lib = require('../lib/lib1');
 const express = require('express');
 const router = express.Router();
-//const passport = require('passport');
-//const jwt = require('jsonwebtoken');
+const fbAdmin = require('firebase-admin') // firebase
 
 const User = require('../models/user');    // user mongoose model
 //const Group = require('../models/group');  // user will join group 
 const Event = require('../models/event');  // user will join event 
 
+// -------------------------- start: firebase db connection ---------------
+let serviceAccount = lib.getFbServiceAccount();
+let firebaseAdmin = fbAdmin.initializeApp({
+    credential:fbAdmin.credential.cert(serviceAccount),
+    databaseURL:lib.getFbDatabaseURL()
+});
+let fbDb = firebaseAdmin.database();
+// -------------------------- end: firebase db connection ------------------
 // 
-router.get('/', (req, res) => { res.send("api version: 1"); });
+router.get('/', (req, res) => {
+    console.log("~~~~~~")
+    res.status(200);
+    res.send("api version: 1.0"); }
+);
+
+function auth(){
+    return false;
+}
+router.post('/auth', (req,res,next)=>{
+    // let idToken = req.body.idToken;
+    let idToken = req.get('idToken')
+    fbAdmin.auth().verifyIdToken(idToken)
+        .then((decodedToken)=>{
+            res.json({data:decodedToken});
+        }).catch((err) =>{
+            res.json({err:err});
+        })
+})
 
 // here is the business
 //router.get('/user', passport.authenticate('jwt',{session:false}), (req, res)=>{
