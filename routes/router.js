@@ -19,14 +19,10 @@ let fbDb = firebaseAdmin.database();
 // -------------------------- end: firebase db connection ------------------
 // 
 router.get('/', (req, res) => {
-    console.log("~~~~~~")
-    res.status(200);
+    // res.status(200);
     res.send("api version: 1.0"); }
 );
 
-function auth(){
-    return false;
-}
 router.post('/auth', (req,res,next)=>{
     // let idToken = req.body.idToken;
     let idToken = req.get('idToken')
