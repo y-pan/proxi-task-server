@@ -1,5 +1,5 @@
 module.exports = {
-    isRunningLodal:false,  /** running local => firebase use secret json file */
+    isRunningLodal:false,  /** running local => firebase use secret json file   */
     isMDbLocal:false,       
     db_local_conn:'mongodb://localhost:27017/proxi-task-mdb',   
     port:3000,
