@@ -1,4 +1,4 @@
 node_modules/
 config/secret/
-myData_ignore/
+ignores/
 .DS_store
