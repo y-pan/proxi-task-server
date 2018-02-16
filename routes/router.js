@@ -23,6 +23,7 @@ router.get('/', (req, res) => {
     res.send("api version: 1.0"); }
 );
 
+// for idToken testing. 
 router.post('/auth', (req,res,next)=>{
     // let idToken = req.body.idToken;
     let idToken = req.get('idToken')
