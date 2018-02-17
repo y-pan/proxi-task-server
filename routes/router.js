@@ -158,6 +158,7 @@ router.get('/searchTasks', (req, res) => {
                 .catch((err) =>{ res.json({"err":err}); return;})
                 .then((data)=>{ 
                     let tasks = [];
+                    let user_id = decodedToken.user_id;
                     if(!data){
                         res.json({"data":tasks}); return;
                     }
@@ -165,6 +166,7 @@ router.get('/searchTasks', (req, res) => {
                     // check distance
                     for(let i=0; i<data.length; i++){
                         let _t = data[i];
+                        if(user_id == _t.user_id) continue; // user won't see own tasks
                         let dis = lib.getDistanceFromLatLon(lat,lon,_t.lat,_t.lon);
 
                         if( dis <= _t.radius){
