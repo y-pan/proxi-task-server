@@ -138,7 +138,7 @@ router.get('/createdTask', (req, res) => {
         })
 });
 
-// 2.3 GET:  [api-root]/tasks/search?lat=43.6753089&lon=-79.459126&distance=50
+// 1.4 GET:  [api-root]/tasks/search?lat=43.6753089&lon=-79.459126&distance=50
 router.get('/searchTasks', (req, res) => {
 
     let lat = req.query.lat;
@@ -183,6 +183,7 @@ router.get('/searchTasks', (req, res) => {
         })
 });
 
+// ============================================ following not completed   : =======================
 // 2.4 POST: [api-root]/task/subscribe    ?task_id=1234123&user_id=1231111
 router.post('/task/subscribe', (req, res) => {
 
