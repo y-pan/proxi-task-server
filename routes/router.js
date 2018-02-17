@@ -18,7 +18,11 @@ let firebaseAdmin = fbAdmin.initializeApp({
     credential:fbAdmin.credential.cert(serviceAccount),
     databaseURL:lib.getFbDatabaseURL()
 });
+console.log("-----------after initializeApp----------")
+
 let fbDb = firebaseAdmin.database();
+console.log("-----------after fbDb----------")
+
 // -------------------------- end: firebase db connection ------------------
 // -------------------------- user/task in mongo,  firebase???
 router.get('/', (req, res) => {
