@@ -5,9 +5,9 @@ const express = require('express');
 const router = express.Router();
 const fbAdmin = require('firebase-admin') // firebase
 
-// const User = require('../models/user');    // user mongoose model
+const User = require('../models/user');    // user mongoose model
 //const Group = require('../models/group');  // user will join group 
-const Task = require('../models/task');  // user will join task 
+const Task = require('../models/task');  // user will join event 
 
 // -------------------------- start: firebase db connection ---------------
 let serviceAccount = lib.getFbServiceAccount();
@@ -26,169 +26,228 @@ router.get('/', (req, res) => {
 // for idToken testing. 
 router.post('/auth', (req,res,next)=>{
     // let idToken = req.body.idToken;
-    fbAdmin.auth().verifyIdToken(req.get('idToken'))
+    let idToken = req.get('idToken')
+    fbAdmin.auth().verifyIdToken(idToken)
         .then((decodedToken)=>{
-            res.status(vars.CODE.RES_CODE_OK)
             res.json({data:decodedToken});
         }).catch((err) =>{
-            res.status(vars.CODE.RES_CODE_ERROR);
             res.json({err:err});
         })
-});
+})
 
 // here is the business
-/*
-res.status(200);
-200 ; 204 No Content
-401 (idToken invalid/expired)
-404 other error
-*/
-// 1.1 User create task using POST: [api-root]/api/newTask   
-router.post('/newTask', (req, res) => {   
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
+//router.get('/user', passport.authenticate('jwt',{session:false}), (req, res)=>{
+//res.json({ "adminAuthenticated": true });
+//});  
+
+
+// 1.1 GET:  [api-root]/user 
+// for admin to get all users
+router.get('/users', (req, res) => {
+    User.findAll((err, data) => {
+        res.json(data);
+    })
+});
+
+// 1.2  GET:  [api-root]/user?id=xxxxxxxxxxxxxxxx
+// https://meetus01.herokuapp.com/api/user?id=5a3005f4a0b4fd00046e940d (except for password, which is erased, but still there is a field call "password" in json)
+
+router.get("/user", (req, res) => {
+    let obj = {};
+    let _id = req.query.id;
+    if (_id) {          // post via url
+        obj = { "_id": _id };
+    } else {
+        res.json({ "err": vars.MSG.ERROR_NOTFOUND });
         return;
     }
-    fbAdmin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            // console.log(decodedToken)
-            // create object json
-            let user_id = decodedToken.user_id;
-            let user_email = decodedToken.email;
-            
-            let taskJson = req.body;
-            taskJson.user_id = user_id;
-            taskJson.user_email = user_email;
-            let newTask = new Task(taskJson);
-            // some exception prevention here -----------
-            if(!lib.validateTask(newTask)) {
-                res.status(vars.CODE.RES_CODE_BAD_REQUEST);
-                console.log("validateTask failed")
-                res.json({"err":vars.MSG.ERROR_INVALID_DATA});
-                return;
+
+    User.getUserByQueryJson(obj, (err, data) => {
+        if (err) {
+            res.json({ "err": vars.MSG.ERROR_CONNECTION });
+        } else {
+            if (!data) {
+                res.json({ "err": vars.MSG.ERROR_NOTFOUND });
+            } else {
+                data.password = "";  // remove password for security purpose, UI don't want to show it
+                res.json({ "data": data });
             }
-            // now proceed to db
-            Task.addTask_p(newTask)
-                .then(data=>{
-                    if(data){
-                        res.status(200);
-                    }else{
-                        res.status(204);
-                    }
-                    res.json({"data":data});
-                })
-                .catch(err =>{
-                    res.status(vars.CODE.RES_CODE_ERROR);
-                    res.json({"err":err});
-                })
-        }).catch((err) =>{ //3 invalid token, unauthorized
-            // res.status(vars.CODE.RES_CODE_UNAUTH);
-            console.log("------- invaild token --------")
-            console.log(err)
-            res.json({"err":err});
-        })
+        }
+    });
 });
 
-// 1.2 GET: [api-root]/tasks       admin get all tasks
-router.get('/tasks',(req,res)=>{
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
-    }
-    fbAdmin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            
-            if(!lib.validateAdmin(decodedToken)){// checking admin is kind of hardcoded 
-                res.json({"err":"invalid admin token"});
-                return;
+// 1.3 POST:  [api-root]/user/register
+// url 
+router.post('/user/login_google', (req, res, next) =>{
+
+    
+
+});
+
+// Register : req.body is better maintainable, just need to modify model and done
+router.post('/user/register', (req, res, next) => {
+    let newUser;
+    newUser = new User(req.body);
+    console.log(newUser.email);
+
+    // check if email already used, don't proceed
+    User.getUserByQueryJson({ "email": newUser.email }, (err, data) => {
+
+        // connect to firebase oauth with
+        // 
+        if (err) {
+            res.json({ "err": vars.MSG.ERROR_CONNECTION });
+        } else {
+            if (data) {
+                res.json({ "err": vars.MSG.ERROR_EMAIL_DUPLICATED });
+            } else {
+                // ok to use this email, clientside should check password valid(not empty, ...)
+                User.addUser(newUser, (err, data) => {
+                    if (err) { res.json({ "err": vars.MSG.ERROR_OPERATIO }); }
+                    else {
+                        data.password = ""; // empty password for security purpose
+                        res.json({ "data": data });
+                    }
+                });
             }
-
-            Task.findAll_p()
-                .then((data)=>{ res.json({"data":data})})
-                .catch((err) =>{ res.json({"err":err})})
-        }).catch((err) =>{ //3 invalid token, unauthorized
-            // res.status(vars.CODE.RES_CODE_UNAUTH);
-            console.log("------- invaild token --------")
-            console.log(err)
-            res.json({"err":err});
-        })
+        }
+    })
 });
 
-// 1.3 GET: [api-root]/createdTask       my created task 
-router.get('/createdTask', (req, res) => {
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
+// 1.4a|b POST: [api-root]/user/login
+// http://localhost:3000/api/user/login?email=panyunkui2@gmail.com&password=111
+router.post("/user/login", (req, res) => {
+    let obj = {};
+    let email = req.query.email;
+    let password = req.query.password;
+    if (email && password) {          // post via url
+        obj = { email, password };
+    } else {                          // post via body 
+        //obj = req.body;   // simply using req.body is not safe
+        obj = { "email": req.body.email, "password": req.body.password }
     }
-    fbAdmin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            
-            Task.getTasksByUserId_p(decodedToken.user_id)
-                .catch((err) =>{ res.json({"err":err}); return;})
-                .then((data)=>{ res.json({"data":data}); return;})
-        }).catch((err) =>{ //3 invalid token, unauthorized
-            // res.status(vars.CODE.RES_CODE_UNAUTH);
-            console.log("------- invaild token --------")
-            console.log(err)
-            res.json({"err":err});
-            return;
-        })
-});
 
-// 2.3 GET:  [api-root]/tasks/search?lat=43.6753089&lon=-79.459126&distance=50
-router.get('/searchTasks', (req, res) => {
+    User.getUserByQueryJson(obj, (err, data) => {
+        if (err) {
+            res.json({ "err": vars.MSG.ERROR_CONNECTION });
+        } else {
+            if (!data) {
+                res.json({ "err": vars.MSG.ERROR_NOTFOUND });
+            } else {
+                data.password = ""; // empty password for security purpose
+                res.json({ "data": data });
+            }
+        }
+    })
+})
 
-    let lat = req.query.lat;
-    let lon = req.query.lon;
-    if(!lat || !lon){
-        res.json({"err":"invalid latitude/longitude"});
-        return;
-    }
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
-    }
-    fbAdmin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            Task.findAll_p()
-                .catch((err) =>{ res.json({"err":err}); return;})
-                .then((data)=>{ 
-                    let tasks = [];
-                    if(!data){
-                        res.json({"data":tasks}); return;
-                    }
-                    
-                    // check distance
-                    for(let i=0; i<data.length; i++){
-                        let _t = data[i];
-                        let dis = lib.getDistanceFromLatLon(lat,lon,_t.lat,_t.lon);
+// 2.1 POST: [api-root]/api/event   
+// host create event: http://localhost:3000/api/event
+router.post('/event', (req, res) => {
+    let newEvent = new Event(req.body);
+    console.log(newEvent);
 
-                        if( dis <= _t.radius){
-                            // console.log("dis=" + dis + "  |  " +_t.radius  + " YES ");
-                            tasks.push(_t);
+    // check if host_id exists in db
+    User.getUserByQueryJson({ "_id": newEvent.host_id }, (err, data) => {
+        if (err) {
+            res.json({ "err": vars.MSG.ERROR_CONNECTION });
+        } else {
+            if (!data || data.length == 0) {
+                res.json({ "err": vars.MSG.ERROR_HOST_NOTFOUND });
+            } else {
+                // check if title already used, don't proceed
+                Event.getEventByQueryJson({ "title": newEvent.title }, (err, data) => {
+                    if (err) {
+                        res.json({ "err": vars.MSG.ERROR_CONNECTION });
+                    } else {
+                        if (data) {
+                            res.json({ "err": vars.MSG.ERROR_EVENT_TITLE_DUPLICATED });
+                        } else {
+                            // ok to use this event, clientside should check other fields if valid(not empty, ...)
+                            Event.addEvent(newEvent, (err, data) => {
+                                if (err) { res.json({ "err": vars.MSG.ERROR_OPERATIO }); }
+                                else { res.json({ "data": data }); }
+                            });
                         }
                     }
-                    res.json({"data":tasks}); return;
-                })
-        }).catch((err) =>{ //3 invalid token, unauthorized
-            // res.status(vars.CODE.RES_CODE_UNAUTH);
-            console.log("------- invaild token --------")
-            console.log(err)
-            res.json({"err":err});
-            return;
-        })
+                });
+            }
+        }
+    })
 });
 
-// 2.4 POST: [api-root]/task/subscribe    ?task_id=1234123&user_id=1231111
-router.post('/task/subscribe', (req, res) => {
+// 2.2 POST: [api-root]/host_event     
+// Host get all self-hosting events 
+// http://localhost:3000/api/host_event, http://localhost:3000/api/host_event?host_id=5a2b4f4d166e4d26b8e7cf45
 
-    let task_id = req.body.task_id;
+router.post('/host_event', (req, res) => {
+    //  {"host_id":"host_id"} */   // obj = req.body  simply using req.body as whole is bad for security concern, but it is lazy way for good code maintainance
+    let obj = {};
+    let host_id = req.query.host_id;
+    if (host_id) {          // post via url
+        obj = { "host_id": host_id };
+    } else {                          // post via body 
+        //obj = req.body;   // simply using req.body is not safe
+        obj = { "host_id": req.body.host_id };
+    }
+    console.log("to post event: " + obj.host_id);
+    Event.getEventsByQueryJson(obj, (err, data) => {
+        if (err) {
+            res.json({ "err": vars.MSG.ERROR_CONNECTION });
+        } else {
+
+            if (!data || data.length == 0) {
+                res.json({ "err": vars.MSG.ERROR_NOTFOUND });
+                console.log(vars.MSG.ERROR_NOTFOUND)
+            } else {
+                res.json({ "data": data });
+                console.log(data)
+
+            }
+        }
+    });
+});
+
+// 2.3 GET:  [api-root]/event/search?latitude=43.6753089&longitude=-79.459126&distance=50
+router.get('/event/search', (req, res) => {
+
+    let lat = req.query.latitude;
+    let lon = req.query.longitude;
+    let dis = req.query.distance;
+    let events = [];
+    // console.log(" search:" +lat + ", "+lon + ", "+dis);
+    Event.getEventsByQueryJson({}, (err, data) => {
+        if (err) {
+            res.json({ "err": vars.MSG.ERROR_CONNECTION });
+        } else {
+            if (!data || data.length == 0) {
+                res.json({ "err": vars.MSG.ERROR_NOTFOUND });
+                // console.log(vars.MSG.ERROR_NOTFOUND)
+            } else {
+                //console.log(data)
+                data.forEach(d => {
+                    if (d.suspended == false && d.active == true) {
+                        let ds = lib.getDistanceFromLatLonInMeter(lat, lon, d.latitude, d.longitude);
+                        // console.log("["+lat+","+lon+"]+["+d.latitude+","+d.longitude+"] =>" + ds);
+                        if (ds <= dis) {
+                            events.push(d);
+                        }
+                    }
+
+                })
+                res.json({ "data": events });
+                // console.log("total:" + events.length +"/"+data.length + " within" + dis);
+            }
+        }
+    });
+});
+
+// 2.4 POST: [api-root]/event/subscribe    ?event_id=1234123&user_id=1231111
+router.post('/event/subscribe', (req, res) => {
+
+    let event_id = req.body.event_id;
     let user_id = req.body.user_id;
-    if (!task_id || !user_id) {
+    if (!event_id || !user_id) {
         res.json({ "err": vars.MSG.ERROR_INVALID_REQUEST });
         return;
     }
@@ -201,8 +260,8 @@ router.post('/task/subscribe', (req, res) => {
                 res.json({ "err": vars.MSG.ERROR_USER_NOTFOUND });
             } else {
                 // so at this point, user exists
-                // then check task exist
-                Event.getEventByQueryJson({ "_id": task_id }, (err, data) => {
+                // then check event exist
+                Event.getEventByQueryJson({ "_id": event_id }, (err, data) => {
                     if (err) {
                         res.json({ "err": vars.MSG.ERROR_CONNECTION });
                     } else {
@@ -210,7 +269,7 @@ router.post('/task/subscribe', (req, res) => {
                             res.json({ "err": vars.MSG.ERROR_NOTFOUND });
                             // console.log(vars.MSG.ERROR_NOTFOUND)
                         } else {
-                            //so at this point task exist
+                            //so at this point event exist
                             if (data.active == false || data.suspended == true) {
                                 res.json({ "err": vars.MSG.ERROR_EVENT_NOT_AVAILABLE });
                                 return;
@@ -252,8 +311,8 @@ router.post('/task/subscribe', (req, res) => {
     })
 });
 
-// 2.5 GET: [api-root]/task?id=2312312
-router.get('/task', (req, res) => {
+// 2.5 GET: [api-root]/event?id=2312312
+router.get('/event', (req, res) => {
 
     let _id = req.query.id;
     if (!_id) {
@@ -274,8 +333,8 @@ router.get('/task', (req, res) => {
     });
 });
 
-// 2.6 GET /guest_task?id=1232abc     to get my attended task
-router.get('/guest_task', (req, res) => {
+// 2.6 GET /guest_event?id=1232abc     to get my attended event
+router.get('/guest_event', (req, res) => {
 
     let guest_id = req.query.id;
     if (!guest_id) {
@@ -283,7 +342,7 @@ router.get('/guest_task', (req, res) => {
         return;
     }
 
-    // let taskArray = [];
+    // let eventArray = [];
     // console.log(" search:" +lat + ", "+lon + ", "+dis);
     Event.getEventsByQueryJson({ "members": guest_id }, (err, data) => {
         if (err) {
@@ -300,9 +359,9 @@ router.get('/guest_task', (req, res) => {
 });
 
 
-// 2.7 POST: [api-root]/task/update
+// 2.7 POST: [api-root]/event/update
 
-router.post('/task/update', (req, res) => {
+router.post('/event/update', (req, res) => {
 
     if (!req.body.title) {
         res.json({ "err": vars.MSG.ERROR_INVALID_REQUEST });
@@ -317,7 +376,7 @@ router.post('/task/update', (req, res) => {
         } else {
             if (data) {
 
-                if (req.body.title == data.title && req.body._id != data._id) { // other task already has same title, not allowed to duplicate title
+                if (req.body.title == data.title && req.body._id != data._id) { // other event already has same title, not allowed to duplicate title
                     res.json({ "err": vars.MSG.ERROR_EVENT_TITLE_DUPLICATED });
                     return;
                 }
@@ -370,22 +429,22 @@ router.post('/task/update', (req, res) => {
     });
 });
 
-// 3.0 GET : [api-root]/tasks     get all tasks
+// 3.0 GET : [api-root]/events     get all events
 
-router.get('/tasks', (req, res) => {
+router.get('/events', (req, res) => {
     Event.findAll((err, data) => {
         res.json(data);
     })
 });
 
-// 3.1a DELETE : [api-root]/task?id=xxx     admin/host delete task by task id
-//https://meetus01.herokuapp.com/api/task?id=5a2754d25aa8e623dcfc2038
+// 3.1a DELETE : [api-root]/event?id=xxx     admin/host delete event by event id
+//https://meetus01.herokuapp.com/api/event?id=5a2754d25aa8e623dcfc2038
 /**
  * return the original data
  * 
  */
 
-router.delete('/task', (req, res) => {
+router.delete('/event', (req, res) => {
     Event.deleteEventById(req.query.id, (err, data) => {
         if (err) {
             res.json({ "err": vars.MSG.ERROR_OPERATION }); // model class specified err message already
@@ -393,14 +452,14 @@ router.delete('/task', (req, res) => {
             if (!data) {
                 res.json({ "err": vars.MSG.ERROR_NOTFOUND });
             } else {
-                console.log("task deleted : " + data)
+                console.log("event deleted : " + data)
                 res.json({ "data": data });
             }
         }
     });
 });
-// 3.1b POST : [api-root]/task/delete?id=xxx    admin/host delete task by task id (backup api)
-router.post('/task/delete', (req, res) => {
+// 3.1b POST : [api-root]/event/delete?id=xxx    admin/host delete event by event id (backup api)
+router.post('/event/delete', (req, res) => {
     Event.deleteEventById(req.query.id, (err, data) => {
         if (err) {
             res.json({ "err": vars.MSG.ERROR_OPERATION }); // model class specified err message already
@@ -408,7 +467,7 @@ router.post('/task/delete', (req, res) => {
             if (!data) {
                 res.json({ "err": vars.MSG.ERROR_NOTFOUND });
             } else {
-                console.log("task deleted : " + data)
+                console.log("event deleted : " + data)
                 res.json({ "data": data });
             }
         }

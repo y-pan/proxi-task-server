@@ -1,3 +1,5 @@
+// import { Promise } from 'mongoose';
+
 // user has multiple tasks, host task / guest task
 // task has task gps, set by host task
 // distance between user and task need to be close enough to mark user attended task, task will record user
@@ -9,27 +11,48 @@ const vars = require('../config/vars');
 const mongoose = require('mongoose');
 
 const TaskSchema = mongoose.Schema({
-    owner_id:{type:String, require:true} /* from idToken.uid */
-    ,owner_email:{type:String, require: true} /* from idToken.email */
-    ,title:{type:String, require:true}
+    /** OWNER */
+    user_id:{type:String, required:true} /* from idToken.uid, from header */
+    ,user_email:{type:String, required: true} /* from idToken.email, from header */
+
+    /** WHAT */
+    ,title:{type:String, required:true}
     ,description:{type:String}
     ,subtitle:{type:String}
-    ,latitude:{type:Number}
-    ,longitude:{type:Number}
-    ,date:{type:String} /* start date of task, host/admin will postpond task by changing date, search task might need to filter if date expired or not */
-    ,address:{type:String}
+    ,price:{type:Number} /* task point to be transfered from owner to candidate once task is done */
 
+    /** WHERE */
+    ,lat:{type:Number}
+    ,lon:{type:Number}
+    ,address:{type:String}  /* owner need to type address. Can android get gps[lat, lon] out of address? what if publisher is not at job location? */
+    ,radius:{type:Number}  /* radius, within radius will be marked as attended, within valid duration */
+
+    /** WHEN */
+    ,date:{type:String} /* ddmmyyyy, start date of task, host/admin will postpond task by changing date, search task might need to filter if date expired or not */
+    ,startTime:{type:String} /** */
+    ,endTime:{type:String}
+
+    /** WHO */
     ,candidates:{type:[String]}  /* candidates' id from idToken.uid */
-    ,pay:{type:Number} /* task point to be transfered from owner to candidate once task is done */
     ,candidate_hired:{type:String} /* 1 candidate's id who is hired by owner */
-    
-   
-    ,distance:{type:Number}  /* radius, within radius will be marked as attended, within valid duration */
  
-    /* state attribute for business */
-    ,locked:{type:Boolean, default:false} /* when owner want to hire a candidate, it get locked (true), when */
-    ,active:{type:Boolean, default:true}
-    ,suspended:{type:Boolean, default:false}
+    /* TASK STATE */
+    ,state:{type:Number} 
+    /* state -
+        0: task just get created by owner,
+            users(not owner) login & apply task, and user's uid will be added to "candidates" array, so owner can see(firebase need to notify owner about new candidate). 
+        1: owner makes job offer a candidate(candate need to login & apply it first, then owner can provide offer to 1 candidate), 
+        2: candidate accepts offer => "candidate_hired" get populated (firebase notify owner for offer accepted), task will get locked (stop receiving new candidates)
+                                     owner's points (price of task)
+           if candidate reject offer, state change back to 0 (firebase notify owner).   
+           owner can cancel offer before it is accepted by candidate (firebase notify .
+        3: candidate complete task => candidate press "complete" button, firebase notifys owner task completion
+            if candidate didn't complete task (abort), state change back to 0 (firebase notify owner)
+        4: owner confirms task completion => points get transferred from owner to candidate. Task closed
+            if owner claims task not completed, state change to -4 (admin person will get involved for dispute)
+        -1: admin person terminates/suspends task (firebase notify owner)
+        */
+
 
 },{collection:'task'});
 // taskStartTime:{type: Date, default: Date.now},
@@ -42,18 +65,59 @@ const TaskSchema = mongoose.Schema({
 
 const Task = module.exports = mongoose.model('task',TaskSchema);
 
+module.exports.findAll_p = () =>{
+    return new Promise((resolve,reject)=>{
+        Task.find({},(err,data)=>{
+            if(err) reject(err);
+            resolve(data);
+        });
+    })
+};
+
+
+module.exports.addTask_p = (newTask) =>{
+    return new Promise((resolve, reject) => {
+        newTask.save((err,data)=>{
+            if(err){
+                reject(err)
+            }else{
+                resolve(data)
+            }
+        })
+    });
+};
+
+module.exports.getTasksByUserId_p = (user_id)=>{
+    return new Promise((resolve,reject) =>{
+        Task.find({user_id:user_id}, (err,data)=>{
+            if(err) reject(err);
+            resolve(data);
+        });
+    });
+};
+//-------------------------
+
+
+
 module.exports.findAll = (callback) =>{
     Task.find({},callback);
 };
 
+// deprecated
 module.exports.addTask = (newTask, callback) =>{
     newTask.save(callback); // newTask is a mongoose object
 };
+
 module.exports.updateTask = (newTask, callback) =>{
     console.log("-- in mongoose : "+newTask);
     newTask.save(callback); // newTask is a mongoose object
     // newTask.findOneAndUpdate({"_id":newTask._id},newTask,callback);
 };
+
+
+
+
+
 module.exports.getTasksByQueryJson = (jsonObject, callback)=>{
     const query = jsonObject;
     Task.find(query, callback); 
@@ -65,10 +129,7 @@ module.exports.getTaskByQueryJson = (jsonObject, callback)=>{
 };
 
 // ===========================================
-module.exports.getTasksByHostId = (host_id, callback)=>{
-    const query = {host_id:host_id};
-    Task.find(query, callback);
-};
+
 module.exports.getTaskByCode_p = (code) => {
     return new Promise((resolve, reject) => {
         const query = {code:code};

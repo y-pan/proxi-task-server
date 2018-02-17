@@ -30,7 +30,7 @@ app.use(logger('dev')); // morgan logger for all request to be logged to server 
 app.use('/api',router); //    {root}/api will go for router
 app.get('/', (req, res)=>{ 
     // console.log('config ref...');
-    res.send('=== Welcome to ProxiTask server, please go to /api ==='); 
+    res.json({"data":'ProxiTask server, please go to /api'}); 
 });
 
 app.listen(app.get('port'), '0.0.0.0', ()=>{

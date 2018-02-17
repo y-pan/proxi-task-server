@@ -5,16 +5,13 @@ const mongoose = require('mongoose');
 const Event = require('./event');
 const Lib = require('../lib/lib1');
 const UserSchema = mongoose.Schema({
-    email:{type:String, require:true},
-    password:{type:String, require:true},
-    
-    name:{type:String},
-    number:{type:String},
-    eventCodes:{type:[String]},
-    loc: { type: [Number]}
-
+    uid:{type:String}                   /* firebase uid*/ 
+    ,email:{type:String}  /** firebase email */
+    // ,password:{type:String}          /** if from firebase, this will be null */
+    ,name:{type:String}                 /** firebase name, user can reset it */
+    ,phone:{type:String}                /** firebase number, user can reset it */
+    ,taskCompleted:{type:[String]}      /** completed task-id */
     ,isAdmin:{type:Boolean, default:false}
-
 },{collection:'user'});
 
 const User = module.exports = mongoose.model('user',UserSchema);
