@@ -8,9 +8,12 @@ const fbAdmin = require('firebase-admin') // firebase
 // const User = require('../models/user');    // user mongoose model
 //const Group = require('../models/group');  // user will join group 
 const Task = require('../models/task');  // user will join task 
-
+console.log("-----------now to do fb serviceAccount----------")
 // -------------------------- start: firebase db connection ---------------
 let serviceAccount = lib.getFbServiceAccount();
+console.log(serviceAccount)
+console.log("-----------now to do initializeApp----------")
+
 let firebaseAdmin = fbAdmin.initializeApp({
     credential:fbAdmin.credential.cert(serviceAccount),
     databaseURL:lib.getFbDatabaseURL()
