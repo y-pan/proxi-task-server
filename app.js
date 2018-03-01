@@ -54,14 +54,15 @@ app.get('/', (req, res)=>{
 app.post('/test/reg_fcmIdToken', (req, res) =>{
     let user_id = req.body.user_id;
     let token = req.body.token;
-    // res.json({"test":"test msg",user_id:user_id, token:token})
-    res.send("I got your: user_id="+user_id + " | token=" + token);
+    res.json({"data":"test msg: user_id="+user_id +"token="+ token})
+    // res.send("I got your: user_id="+user_id + " | token=" + token);
 })
 
 app.post('/test/msg', (req,res,next)=>{
     let title = req.body.title ||  "ProxiTask message";
     let message = req.body.message || "You're hired from ProxiTask!";
     let registrationToken = req.get('msgToken');
+    let shortToken = registrationToken.substring(registrationToken.length/2)
  // title=My%20Title&message=You're hired from ProxiTask! 
 
     var messageObj = {
@@ -82,12 +83,12 @@ app.post('/test/msg', (req,res,next)=>{
                 // Response is a message ID string.
                 console.log('Successfully sent message:', response);
                 // res.json({data:"Successfully sent message: title=" + title + "; msg=" + message})
-                res.send("Successfully sent message: title=" + title + "; msg=" + message);
+                res.json({data:"Successfully sent message: title=" + title + "; msg=" + message + "; msgToken(last half)="+shortToken});
             })
             .catch((error) => {
                 console.log(error);
                 // res.json({data:"Error"})
-                res.send("error!!!");
+                res.json({err:error, "msgToken(last half)":shortToken});
             });
 
 });
