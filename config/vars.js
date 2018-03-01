@@ -1,29 +1,26 @@
 module.exports = {
-    isRunningLodal:false,  /** running local => firebase use secret json file   */
-    isMDbLocal:false,      /* use local mongodb instead of mlab, for local dev*/ 
-    db_local_conn:'mongodb://localhost:27017/proxi-task-mdb',   
-    port:3000
-    /*,msgCode:{
-        notConnected:0,
-        notFound:1,
-        dbOperationError:2,
-        success:100
-    }*/
-    /**response.status:
-    200 OK
-    201 Created
-    202 Accepted
-    204 No Content
+    /** when you deploy onto heroku, 
+     * both mongoDbConnectionNum and firebaseSdkNum will be override as 0, to use heroku env for both mongodb and firebase
+     * */
 
+    mongoDbConnectionNum:1 
+    /** 0 - using heroku env, which is also for production; 
+     *  1 - use mlab connection (same as production 0) but the connection value is from secret file; 
+     *  2 - use local mongodb connection; 
+     * */
+    ,firebaseSdkNum:2 
+    /** 0 - using heroku env, which is also for productin; 
+     *  1 - local projects firebase-adminsdk file in secret, so related using firebaseDatabaseURL1, same info as heroku; 
+     *  2 - my demo fb, firebaseDatabaseURL2;
+     *  3 - my old fb, firebaseDatabaseURL3, basically not in use 
+     * */
     
-    400 Bad Request
-    401 Unauthorized
-    402 Payment Required
-    403 Forbidden
-    404 Not Found
-    405 Method Not Allowed
-    406 Not Acceptable
-    423 Locked */
+    // ,isRunningLodal:true,  /** running local => firebase use secret json file   */
+    // local_firebaseAdminSdkNum:0,  /** local_firebaseAdminSdkNum only in effect for "isRunningLodal" = true,  so 0-project's sdk, 1-demo sdk */
+    // isMDbLocal:false,      /* use local mongodb instead of mlab, for local dev*/ 
+    
+    
+    ,port:3000
     ,CODE:{
         RES_CODE_OK:200,
         RES_CODE_OK_BUT_EMPTY:204,

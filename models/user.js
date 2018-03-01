@@ -2,10 +2,12 @@
 // loc: [lat, lon]
 const vars = require('../config/vars');
 const mongoose = require('mongoose');
-const Event = require('./event');
+// const Event = require('./event');
 const Lib = require('../lib/lib1');
 const UserSchema = mongoose.Schema({
     uid:{type:String}                   /* firebase uid*/ 
+    ,msgToken:{type:String} /* firebaseInstanceIdToken, so client can ask server to send notification message to other people based on user_id from idToken*/
+    
     ,email:{type:String}  /** firebase email */
     // ,password:{type:String}          /** if from firebase, this will be null */
     ,name:{type:String}                 /** firebase name, user can reset it */
@@ -16,6 +18,70 @@ const UserSchema = mongoose.Schema({
 
 const User = module.exports = mongoose.model('user',UserSchema);
 
+
+module.exports.getMsgtokenByUser_id_p = (user_id)=>{
+    return new Promise((resolve, reject) => {
+        User.findOne({user_id:user_id}, (err, data)=>{
+            if(err){
+                reject(err);
+            }else{
+                resolve(data.msgToken);
+            }
+        }); 
+    });
+};
+
+module.exports.addUser_p = (newUser) =>{   
+    return new Promise((resolve, reject) =>{
+        newUser.save((err,data) =>{
+            if(err){
+                reject(err);
+            }else{
+                resolve(data);
+            }
+        }); 
+    })
+};
+
+module.exports.upSertUser_p = (newUser) => {
+    return new Promise((resolve, reject)=>{
+        if(!newUser.msgToken || !newUser.user_id){
+            reject("missing critical info");
+        }
+        User.findOneAndUpdate({user_id:user_id},newUser,{ upsert: true }, (err, data)=>{
+            if(err) {reject(err); }
+            else{
+                resolve(data);
+            }
+        });
+    });
+};
+
+module.exports.updateUserMsgTokenByUser_id_p = (user_id, body) => {
+    return new Promise((resolve, reject)=>{
+        if(!body.msgToken || !user_id){
+            reject("missing critical info");
+        }
+        User.findOne({user_id:user_id}, (err, data)=>{
+            if(err) {reject(err); }
+            if(body.msgToken == data.msgToken){
+                resolve(data);// msgToken is same/up-to-date, no need to update    
+            }else{ // different already, need to update
+                data.msgToken = body.msgToken || data.msgToken
+                data.save((err, data) =>{
+                    if(err){
+                        reject(err);
+                    }else{
+                        resolve(data);
+                    }
+                })
+            }
+        });
+    });
+};
+
+
+// ================================ rest are callback, not in use, I like promise =========
 module.exports.findAll = (callback) =>{
     User.find({},callback);
 };
@@ -57,7 +123,6 @@ module.exports.getUserByEmail_p = (email) =>{
         });
     });
 }
-
 
 
 module.exports.getUserById = (id,callback)=>{
