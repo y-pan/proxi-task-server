@@ -87,7 +87,7 @@ taskRouter.get('/all',(req,res)=>{
 });
 
 // 1.3 GET: [api-root]/createdTask       my created task 
-taskRouter.get('/created', (req, res) => {
+taskRouter.get('/mycreated', (req, res) => {
     let idToken = req.get('idToken');
     if(!idToken){
         res.json({"err":"invalid token"});
