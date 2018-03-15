@@ -8,7 +8,7 @@ module.exports = {
      *  1 - use mlab connection (same as production 0) but the connection value is from secret file; 
      *  2 - use local mongodb connection; 
      * */
-    ,firebaseSdkNum:2 
+    ,firebaseSdkNum:1
     /** 0 - using heroku env, which is also for productin; 
      *  1 - local projects firebase-adminsdk file in secret, so related using firebaseDatabaseURL1, same info as heroku; 
      *  2 - my demo fb, firebaseDatabaseURL2;

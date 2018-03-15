@@ -65,6 +65,20 @@ const TaskSchema = mongoose.Schema({
 
 const Task = module.exports = mongoose.model('task',TaskSchema);
 
+module.exports.getTaskById_p = (id)=>{
+    return new Promise((resolve, reject) => {
+        Task.findById({"_id":id}, (err, data) => {
+            if(err){
+                reject(err)
+            }else{
+                resolve(data)
+            }
+        }); // id refers to _id. When mongodb saves an data object(document) into collection, it creats unique _id within the document, as an additional attribute
+
+    });
+};
+
+
 module.exports.findAll_p = () =>{
     return new Promise((resolve,reject)=>{
         Task.find({},(err,data)=>{
@@ -95,6 +109,23 @@ module.exports.getTasksByUserId_p = (user_id)=>{
         });
     });
 };
+
+module.exports.updateTask_p = (newTask) =>{
+    return new Promise((resolve, reject) => {
+        console.log("-- in mongoose : "+newTask);
+        newTask.save((err, data) =>{
+            if(err){
+                reject(err)
+            }else{
+                resolve(data)
+            }
+        }); // newTask is a mongoose object
+        // newTask.findOneAndUpdate({"_id":newTask._id},newTask,callback);
+    });
+    
+};
+
+
 //-------------------------
 
 
@@ -149,9 +180,7 @@ module.exports.getTaskByName = (name, callback)=>{
     Task.findOne(query, callback);
 };
 
-module.exports.getTaskById = (id,callback)=>{
-    Task.findById(id, callback); // id refers to _id. When mongodb saves an data object(document) into collection, it creats unique _id within the document, as an additional attribute
-};
+
 
 
 

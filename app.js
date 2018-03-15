@@ -25,10 +25,11 @@ const userRouter = require('./routes/userRouter');
 
 // ------------------------ start: mongo db connection --------------------
 mongoose.Promise = global.Promise;
+let conn = lib.getMongoDbConnection(vars.mongoDbConnectionNum)
 mongoose.connect(lib.getMongoDbConnection(vars.mongoDbConnectionNum)).then(()=>{
    console.log('[OK] MongoDB connection:'+ vars.mongoDbConnectionNum);    
 }).catch((err)=>{
-   console.log('[ERROR] MongoDB connection:'+ vars.mongoDbConnectionNum);    
+   console.log('[ERROR] MongoDB connection:'+ vars.mongoDbConnectionNum + "; conn=" + conn);    
 });
 // -------------------------- end: mongo db connection --------------------
 firebaseManager.init(vars.firebaseSdkNum);
@@ -40,6 +41,31 @@ app.set('port', (process.env.PORT || 3000));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(logger('dev')); // morgan logger for all request to be logged to server console, like 
+
+// firebase check id first
+
+function checkIdTokenFirst(req, res, next){
+    let idToken = req.get('idToken');
+    if(!idToken){
+        res.json({"err":"invalid token"});
+        return;
+    }
+    firebaseManager.admin.auth().verifyIdToken(idToken)
+        .then((decodedToken)=>{
+
+            // let user_id = decodedToken.user_id;
+            // let user_email = decodedToken.email;
+            next();
+        }).catch((err) =>{ //3 invalid token, unauthorized
+            // res.status(vars.CODE.RES_CODE_UNAUTH);
+            console.log("------- invaild token --------")
+            console.log(err)
+            res.json({"err":err});
+        })
+}
+
+app.use(checkIdTokenFirst)
+
 
 app.use('/api/task',taskRouter); //    {root}/api/task will go for taskRouter
 app.use('/api/user',userRouter); //    {root}/api/user  for user, msgToken,...
@@ -96,7 +122,10 @@ app.post('/test/msg', (req,res,next)=>{
 // for idToken testing. 
 app.post('/test/auth', (req,res,next)=>{
     // let idToken = req.body.idToken;
-    firebaseManager.admin.auth().verifyIdToken(req.get('idToken'))
+    let idToken = req.get('idToken');
+    console.log(firebaseManager.admin)
+   
+    firebaseManager.admin.auth().verifyIdToken(idToken)
         .then((decodedToken)=>{
             res.status(vars.CODE.RES_CODE_OK)
             res.json({data:decodedToken});
@@ -104,6 +133,7 @@ app.post('/test/auth', (req,res,next)=>{
             res.status(vars.CODE.RES_CODE_ERROR);
             res.json({err:err});
         })
+
 });
 
 
