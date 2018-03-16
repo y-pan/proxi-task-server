@@ -37,7 +37,7 @@ const TaskSchema = mongoose.Schema({
     ,candidate_hired:{type:String} /* 1 candidate's id who is hired by owner */
  
     /* TASK STATE */
-    ,state:{type:Number} 
+    ,state:{type:Number, default:0} 
     /* state -
         0: task just get created by owner,
             users(not owner) login & apply task, and user's uid will be added to "candidates" array, so owner can see(firebase need to notify owner about new candidate). 
@@ -52,7 +52,6 @@ const TaskSchema = mongoose.Schema({
             if owner claims task not completed, state change to -4 (admin person will get involved for dispute)
         -1: admin person terminates/suspends task (firebase notify owner)
         */
-
 
 },{collection:'task'});
 // taskStartTime:{type: Date, default: Date.now},
@@ -123,9 +122,39 @@ module.exports.updateTask_p = (newTask) =>{
                 resolve(data);
             }
         })
-      
     });
 };
+
+module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{
+    return new Promise((resolve, reject) =>{
+        Task.findById({"_id" : taskId}, (err, data) =>{
+            if(err){reject(err);}
+            else{
+                if(data.user_id != owner_user_id){
+                    reject("Error: You're not the owner of the task! You cannot offer this task to anyone!");
+                }else{
+                    if(data.candidate_hired == undefined || data.candidate_hired == null || data.candidate_hired ==""){
+                        if(lib.arrayContains(data.candidates, candidate_user_id)){
+                            // task not offered, candidate is in data.candidats, then can hire
+                            data.candidate_hired = candidate_user_id;
+                            data.state += 1;
+                            data.save((err, data) =>{
+                                if(err){ reject(err); }
+                                else { resolve(data); }
+                            })
+                        }else{
+                            // candidate is not in data.candidates
+                            reject("Error: Candidate have to apply first, then you can make the offer.")
+                        }
+                    }else{
+                        // task already offered
+                        reject("Error: Task is already offered to someone, you cannot offer same task to others!")
+                    }
+                }
+            }
+        })
+    });
+}
 
 module.exports.applyTask = (taskId, candidate_user_id) =>{
     return new Promise((resolve, reject) =>{
@@ -172,7 +201,7 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{
     });
 }
 
-//-------------------------
+//-----------------------------------------------------------
 
 
 

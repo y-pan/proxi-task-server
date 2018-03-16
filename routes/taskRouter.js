@@ -168,18 +168,32 @@ taskRouter.get('/search', (req, res) => {
 });
 
 
-// 1.5 
+// 1.5 POST user apply task created by other
 taskRouter.post('/apply', (req, res) => {
     console.log('do apply......')
     // console.log(req.decodedToken)
     let taskId =req.query.taskId;
     let candidate_user_id = req.decodedToken.user_id
     Task.applyTask(taskId, candidate_user_id).then(data => {
+        res.json({data:data});
+    }).catch(err => {
+        res.json({err:err});
+    })
+});
+
+// 1.6 POST owner hire one of candidates
+taskRouter.post('/offer', (req, res) => {
+    console.log('do hire......');
+    let taskId =req.body.taskId;
+    let candidate_user_id = req.body.candidate_user_id;
+    let owner_user_id = req.decodedToken.user_id
+    Task.offerTask(taskId, owner_user_id, candidate_user_id).then(data => {
         res.json({data:data})
     }).catch(err => {
         res.json({err:err})
     })
 })
+
 // 1.8 POST: Owner update task using   
 taskRouter.post('/update', (req, res) => {   
     // let taskJson = req.body;
