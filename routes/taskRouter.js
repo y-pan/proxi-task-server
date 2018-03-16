@@ -129,41 +129,28 @@ taskRouter.get('/search', (req, res) => {
         res.json({"err":"invalid latitude/longitude"});
         return;
     }
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
-    }
-    firebaseManager.admin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            Task.findAll_p()
-                .catch((err) =>{ res.json({"err":err}); return;})
-                .then((data)=>{ 
-                    let tasks = [];
-                    let user_id = decodedToken.user_id;
-                    if(!data){
-                        res.json({"data":tasks}); return;
-                    }
-                    
-                    // check distance
-                    for(let i=0; i<data.length; i++){
-                        let _t = data[i];
-                        if(user_id == _t.user_id) continue; // user won't see own tasks
+    Task.findAll_p()
+        .catch((err) =>{ res.json({"err":err}); return;})
+        .then((data)=>{ 
+            let tasks = [];
+            let user_id = req.decodedToken.user_id;
+            if(!data){
+                res.json({"data":tasks}); return;
+            }
+            
+            // check distance
+            for(let i=0; i<data.length; i++){
+                let _t = data[i];
+                if(_t.state == 0 || _t.state == null || _t.state == undefined){
+                    if(user_id == _t.user_id) { continue; // user won't see own tasks}
                         let dis = lib.getDistanceFromLatLon(lat,lon,_t.lat,_t.lon);
-
                         if( dis <= _t.radius){
-                            // console.log("dis=" + dis + "  |  " +_t.radius  + " YES ");
                             tasks.push(_t);
                         }
                     }
-                    res.json({"data":tasks}); return;
-                })
-        }).catch((err) =>{ //3 invalid token, unauthorized
-            // res.status(vars.CODE.RES_CODE_UNAUTH);
-            console.log("------- invaild token --------")
-            console.log(err)
-            res.json({"err":err});
-            return;
+                }
+            }
+            res.json({"data":tasks}); return;
         })
 });
 
