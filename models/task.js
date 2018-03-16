@@ -113,14 +113,17 @@ module.exports.getTasksByUserId_p = (user_id)=>{
 module.exports.updateTask_p = (newTask) =>{
     return new Promise((resolve, reject) => {
         console.log("-- in mongoose : "+newTask);
-        newTask.save((err, data) =>{
+        let _id = newTask._id;
+        delete newTask._id
+
+        Task.findOneAndUpdate({"_id":_id}, newTask,{new: true}, (err, data) => {
             if(err){
                 reject(err)
             }else{
                 resolve(data)
             }
-        }); // newTask is a mongoose object
-        // newTask.findOneAndUpdate({"_id":newTask._id},newTask,callback);
+        })
+      
     });
     
 };

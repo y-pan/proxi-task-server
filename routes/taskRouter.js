@@ -8,7 +8,7 @@ const User = require('../models/user');    // user mongoose model
 const Task = require('../models/task');  // user will join task 
 
 
-
+// 1.7 get task by taskId in query
 taskRouter.get('/', (req, res) => {
     id = req.query.taskId;
     if(!id){
@@ -166,30 +166,13 @@ taskRouter.get('/search', (req, res) => {
 
 // 1.5 Owner update task using POST:    
 taskRouter.post('/update', (req, res) => {   
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
-    }
-    firebaseManager.admin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-
-            let user_id = decodedToken.user_id;
-            let user_email = decodedToken.email;
-            
-            let taskJson = req.body;
-            let newTask = new Task(taskJson);
-            Task.updateTask_p(newTask).then(data =>{
-                res.json({"data":data});
-            }).catch(err => {
-                res.json({"err":err})
-            })
-        }).catch((err) =>{ //3 invalid token, unauthorized
-            // res.status(vars.CODE.RES_CODE_UNAUTH);
-            console.log("------- invaild token --------")
-            console.log(err)
-            res.json({"err":err});
-        })
+    // let taskJson = req.body;
+    // let newTask = new Task(taskJson);
+    Task.updateTask_p(req.body).then(data =>{
+        res.json({"data":data});
+    }).catch(err => {
+        res.json({"err":err})
+    })
 });
 
 
