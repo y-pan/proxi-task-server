@@ -7,7 +7,7 @@
 // data rules: no duplicated code, members and membersIn is email
 // loc: [lat, lon]
 const vars = require('../config/vars');
-
+const lib = require('../lib/lib1');
 const mongoose = require('mongoose');
 
 const TaskSchema = mongoose.Schema({
@@ -33,7 +33,7 @@ const TaskSchema = mongoose.Schema({
     ,endTime:{type:String}
 
     /** WHO */
-    ,candidates:{type:[String]}  /* candidates' id from idToken.uid */
+    ,candidates:{type:[String]}  /* candidates' id from idToken.uid or idToken.user_id*/
     ,candidate_hired:{type:String} /* 1 candidate's id who is hired by owner */
  
     /* TASK STATE */
@@ -118,16 +118,59 @@ module.exports.updateTask_p = (newTask) =>{
 
         Task.findOneAndUpdate({"_id":_id}, newTask,{new: true}, (err, data) => {
             if(err){
-                reject(err)
+                reject(err);
             }else{
-                resolve(data)
+                resolve(data);
             }
         })
       
     });
-    
 };
 
+module.exports.applyTask = (taskId, candidate_user_id) =>{
+    return new Promise((resolve, reject) =>{
+
+        Task.findById({"_id":taskId}, (err, data) => {
+            if(err){
+                reject(err)
+            }else{
+                if(data.user_id == candidate_user_id){
+                    reject("Error: You cannot apply your own task!")
+                }else{
+                    if(lib.arrayContains(data.candidates, candidate_user_id)){
+                        // already a candidate of task, no further action
+                        resolve(data);
+                        return;
+                    }else{
+
+                        console.log("not yet a candidate, need to push candidate_user_id. .....")
+                        data.candidates.push(candidate_user_id);
+                        data.save((err, ndata) =>{
+                            if(err) { reject(err); }
+                            else { resolve(ndata); }
+                        })
+                        // let _id = data._id;
+                        // delete data._id;
+                        // Task.findOneAndUpdate({"_id":_id}, data,{new: true}, (err, ndata) => {
+                        //     if(err){
+                        //         reject(err);
+                        //     }else{
+                        //         resolve(ndata);
+                        //     }
+                        // })
+                    }
+                }
+            }
+        });
+        // Task.findOneAndUpdate([{"_id":taskId},{"user_id":{$not:candidate_user_id}}], {$push:{candidates:candidate_user_id}},{new: true},(err, data)=>{
+        //     if(err){
+        //         reject(err);
+        //     }else{
+        //         resolve(data);
+        //     }
+        // } );
+    });
+}
 
 //-------------------------
 

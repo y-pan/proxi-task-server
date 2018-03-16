@@ -93,7 +93,11 @@ taskRouter.get('/all',(req,res)=>{
             res.json({"err":err});
         })
 });
-
+taskRouter.get('/testall',(req,res)=>{
+    Task.findAll_p()
+                .then((data)=>{ res.json({"data":data})})
+                .catch((err) =>{ res.json({"err":err})})
+});
 // 1.3 GET: [api-root]/createdTask       my created task 
 taskRouter.get('/mycreated', (req, res) => {
     let idToken = req.get('idToken');
@@ -164,7 +168,19 @@ taskRouter.get('/search', (req, res) => {
 });
 
 
-// 1.5 Owner update task using POST:    
+// 1.5 
+taskRouter.post('/apply', (req, res) => {
+    console.log('do apply......')
+    // console.log(req.decodedToken)
+    let taskId =req.query.taskId;
+    let candidate_user_id = req.decodedToken.user_id
+    Task.applyTask(taskId, candidate_user_id).then(data => {
+        res.json({data:data})
+    }).catch(err => {
+        res.json({err:err})
+    })
+})
+// 1.8 POST: Owner update task using   
 taskRouter.post('/update', (req, res) => {   
     // let taskJson = req.body;
     // let newTask = new Task(taskJson);

@@ -55,6 +55,7 @@ function checkIdTokenFirst(req, res, next){
 
             // let user_id = decodedToken.user_id;
             // let user_email = decodedToken.email;
+            req.decodedToken = decodedToken; // so accessable for next function
             next();
         }).catch((err) =>{ //3 invalid token, unauthorized
             // res.status(vars.CODE.RES_CODE_UNAUTH);
