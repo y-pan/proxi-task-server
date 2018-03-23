@@ -16,21 +16,21 @@ const TaskSchema = mongoose.Schema({
     ,user_email:{type:String, required: true} /* from idToken.email, from header */
 
     /** WHAT */
-    ,title:{type:String, required:true}
-    ,description:{type:String}
-    ,subtitle:{type:String}
+    ,title:{type:String, required:true} /* Title of the event */
+    ,description:{type:String} /*Description of th event */
+    ,subtitle:{type:String} /*Subtitle of the event */
     ,price:{type:Number} /* task point to be transfered from owner to candidate once task is done */
 
     /** WHERE */
-    ,lat:{type:Number}
-    ,lon:{type:Number}
+    ,lat:{type:Number} /* Latitude of the event */
+    ,lon:{type:Number} /* Longitude of the event */
     ,address:{type:String}  /* owner need to type address. Can android get gps[lat, lon] out of address? what if publisher is not at job location? */
     ,radius:{type:Number}  /* radius, within radius will be marked as attended, within valid duration */
 
     /** WHEN */
     ,date:{type:String} /* ddmmyyyy, start date of task, host/admin will postpond task by changing date, search task might need to filter if date expired or not */
-    ,startTime:{type:String} /** */
-    ,endTime:{type:String}
+    ,startTime:{type:String} /*The start time of the event */
+    ,endTime:{type:String} /*The end time of the event */
 
     /** WHO */
     ,candidates:{type:[String]}  /* candidates' id from idToken.uid or idToken.user_id*/
@@ -64,12 +64,12 @@ const TaskSchema = mongoose.Schema({
 
 const Task = module.exports = mongoose.model('task',TaskSchema);
 
-module.exports.getTaskById_p = (id)=>{
-    return new Promise((resolve, reject) => {
+module.exports.getTaskById_p = (id) => { //Query for a single task based on _id
+    return new Promise((resolve, reject) => { 
         Task.findById({"_id":id}, (err, data) => {
-            if(err){
+            if(err){ //If error, reject with error message
                 reject(err)
-            }else{
+            }else{ //Otherwise resolve data
                 resolve(data)
             }
         }); // id refers to _id. When mongodb saves an data object(document) into collection, it creats unique _id within the document, as an additional attribute
@@ -78,7 +78,7 @@ module.exports.getTaskById_p = (id)=>{
 };
 
 
-module.exports.findAll_p = () =>{
+module.exports.findAll_p = () =>{ //Query for all tasks in the database
     return new Promise((resolve,reject)=>{
         Task.find({},(err,data)=>{
             if(err) reject(err);
@@ -88,7 +88,7 @@ module.exports.findAll_p = () =>{
 };
 
 
-module.exports.addTask_p = (newTask) =>{
+module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
     return new Promise((resolve, reject) => {
         newTask.save((err,data)=>{
             if(err){
@@ -100,7 +100,7 @@ module.exports.addTask_p = (newTask) =>{
     });
 };
 
-module.exports.getTasksByUserId_p = (user_id)=>{
+module.exports.getTasksByUserId_p = (user_id)=>{ //Find all tasks hosted by a specific user_id
     return new Promise((resolve,reject) =>{
         Task.find({user_id:user_id}, (err,data)=>{
             if(err) reject(err);
@@ -108,7 +108,7 @@ module.exports.getTasksByUserId_p = (user_id)=>{
         });
     });
 };
-module.exports.getTasksByCandidateId_p = (user_id)=>{
+module.exports.getTasksByCandidateId_p = (user_id)=>{ //Find all tasks in which a user_id is a candidate
     return new Promise((resolve,reject) =>{
         Task.find({candidates:user_id}, (err,data)=>{
             if(err) reject(err);
@@ -118,7 +118,7 @@ module.exports.getTasksByCandidateId_p = (user_id)=>{
 };
 
 // get task that completed
-module.exports.getTasksCompleted_p = (user_id)=>{
+module.exports.getTasksCompleted_p = (user_id)=>{  //Find all tasks that are completed by a specific user_id
     console.log("user_id: " + user_id);
     return new Promise((resolve,reject) =>{
         Task.find({candidate_hired:user_id, state:4}, (err,data)=>{
@@ -129,7 +129,7 @@ module.exports.getTasksCompleted_p = (user_id)=>{
 };
 
 
-module.exports.updateTask_p = (newTask) =>{
+module.exports.updateTask_p = (newTask) =>{ //Find a specific task and update it with new data
     return new Promise((resolve, reject) => {
         console.log("-- in mongoose : "+newTask);
         let _id = newTask._id;
@@ -145,7 +145,7 @@ module.exports.updateTask_p = (newTask) =>{
     });
 };
 
-module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{
+module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ //
     return new Promise((resolve, reject) =>{
         Task.findById({"_id" : taskId}, (err, data) =>{
             if(err){reject(err);}
@@ -157,7 +157,7 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{
                         if(lib.arrayContains(data.candidates, candidate_user_id)){
                             // task not offered, candidate is in data.candidats, then can hire
                             data.candidate_hired = candidate_user_id;
-                            data.state += 1;
+                            data.state += 1; //The task moves towards the next state, now considered 2 - candidate accepted offer
                             data.save((err, data) =>{
                                 if(err){ reject(err); }
                                 else { resolve(data); }
@@ -176,7 +176,7 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{
     });
 }
 
-module.exports.applyTask = (taskId, candidate_user_id) =>{
+module.exports.applyTask = (taskId, candidate_user_id) =>{ //Apply to a task as a candidate
     return new Promise((resolve, reject) =>{
 
         Task.findById({"_id":taskId}, (err, data) => {
@@ -225,7 +225,7 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{
 
 
 
-module.exports.findAll = (callback) =>{
+module.exports.findAll = (callback) =>{ 
     Task.find({},callback);
 };
 
