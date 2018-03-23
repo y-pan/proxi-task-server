@@ -94,16 +94,21 @@ taskRouter.get('/search', (req, res) => {
 
     let lat = req.query.lat;
     let lon = req.query.lon;
+    console.log("@@@ searching by goe codes: " + lat + " | " + lon )
+
     if(!lat || !lon){
         res.json({"err":"invalid latitude/longitude"});
         return;
     }
+    console.log("@@@ goe codes are ok..." )
+
     Task.findAll_p()
         .catch((err) =>{ res.json({"err":err}); return;})
         .then((data)=>{ 
             let tasks = [];
             let user_id = req.decodedToken.user_id;
             if(!data){
+                console.log("@@@ Databasee is empty." )
                 res.json({"data":tasks}); return;
             }
             
@@ -115,10 +120,14 @@ taskRouter.get('/search', (req, res) => {
                         let dis = lib.getDistanceFromLatLon(lat,lon,_t.lat,_t.lon);
                         if( dis <= _t.radius){
                             tasks.push(_t);
+                            console.log("@@@ task found: " + _t.title + " radius=" + _t.radius)
+                            
                         }
                     }
                 }
             }
+            console.log("@@@ Finally totak tasks found: " + tasks.length);
+
             res.json({"data":tasks}); return;
         })
 });
