@@ -41,14 +41,14 @@ const TaskSchema = mongoose.Schema({
     /* state -
         0: task just get created by owner,
             users(not owner) login & apply task, and user's uid will be added to "candidates" array, so owner can see(firebase need to notify owner about new candidate). 
-        1: owner makes job offer a candidate(candate need to login & apply it first, then owner can provide offer to 1 candidate), 
-        2: candidate accepts offer => "candidate_hired" get populated (firebase notify owner for offer accepted), task will get locked (stop receiving new candidates)
+        1: owner maked job offer a candidate(candate need to login & apply it first, then owner can provide offer to 1 candidate), 
+        2: candidate accepted offer => "candidate_hired" get populated (firebase notify owner for offer accepted), task will get locked (stop receiving new candidates)
                                      owner's points (price of task)
            if candidate reject offer, state change back to 0 (firebase notify owner).   
            owner can cancel offer before it is accepted by candidate (firebase notify .
-        3: candidate complete task => candidate press "complete" button, firebase notifys owner task completion
+        3: candidate claims task completed  => candidate press "complete" button, firebase notifys owner task completion
             if candidate didn't complete task (abort), state change back to 0 (firebase notify owner)
-        4: owner confirms task completion => points get transferred from owner to candidate. Task closed
+        4: owner confirms task completed => points get transferred from owner to candidate. Task closed
             if owner claims task not completed, state change to -4 (admin person will get involved for dispute)
         -1: admin person terminates/suspends task (firebase notify owner)
         */
@@ -108,6 +108,26 @@ module.exports.getTasksByUserId_p = (user_id)=>{
         });
     });
 };
+module.exports.getTasksByCandidateId_p = (user_id)=>{
+    return new Promise((resolve,reject) =>{
+        Task.find({candidates:user_id}, (err,data)=>{
+            if(err) reject(err);
+            resolve(data);
+        });
+    });
+};
+
+// get task that completed
+module.exports.getTasksCompleted_p = (user_id)=>{
+    console.log("user_id: " + user_id);
+    return new Promise((resolve,reject) =>{
+        Task.find({candidate_hired:user_id, state:4}, (err,data)=>{
+            if(err) reject(err);
+            resolve(data);
+        });
+    });
+};
+
 
 module.exports.updateTask_p = (newTask) =>{
     return new Promise((resolve, reject) => {

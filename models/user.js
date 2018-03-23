@@ -5,19 +5,63 @@ const mongoose = require('mongoose');
 // const Event = require('./event');
 const Lib = require('../lib/lib1');
 const UserSchema = mongoose.Schema({
-    uid:{type:String}                   /* firebase uid*/ 
-    ,msgToken:{type:String} /* firebaseInstanceIdToken, so client can ask server to send notification message to other people based on user_id from idToken*/
-    
-    ,email:{type:String}  /** firebase email */
+    user_id:{type:String}                   /* firebase uid*/ 
+    ,msgToken:{type:String, default:""} /* firebaseInstanceIdToken, so client can ask server to send notification message to other people based on user_id from idToken*/
+    ,email:{type:String, default:""}  /** firebase email */
     // ,password:{type:String}          /** if from firebase, this will be null */
-    ,name:{type:String}                 /** firebase name, user can reset it */
-    ,phone:{type:String}                /** firebase number, user can reset it */
-    ,taskCompleted:{type:[String]}      /** completed task-id */
+    ,name:{type:String, default:""}                 /** firebase name, user can reset it */
+    ,phone:{type:String, default:""}                /** firebase number, user can reset it */
+    ,taskApplied:{type:[String], default:[]}        /** my applied task-id */
+    ,taskCompleted:{type:[String], default:[]}      /** my completed task-id */
+    ,taskCreated:{type:[String], default:[]}        /** my created task-id */
     ,isAdmin:{type:Boolean, default:false}
 },{collection:'user'});
 
 const User = module.exports = mongoose.model('user',UserSchema);
 
+
+module.exports.login = (decodedToken) =>{
+    let user_id = decodedToken.user_id;
+    let email = decodedToken.email;
+    
+    return new Promise((resolve, reject)=>{
+        User.findOne({user_id:user_id}, (err, data)=>{
+            if(err){
+                reject(err);
+            }else{
+                if(!data){
+                    // create new user doc
+                    let _user = {} 
+                    _user.user_id = user_id;
+                    _user.email = email;
+                    let _User = new User(_user);
+                    _User.save((_err, _data) =>{
+                        if(err){
+                            reject(_err)
+                        }else{
+                            resolve(_data)
+                        }
+                    });
+                }else{
+                    if(data.email != email){
+                        data.email = email;
+                        data.save((__err, __data)=>{
+                            if(__err){reject(__err);}
+                            else{ resolve(__data);}
+                        })
+                    }
+                    else{resolve(data);}
+                }
+            }
+        })
+    });
+    
+    // when user login succeeded via Firebase on Android, user will do here
+    // upsert user
+
+    // get server profile for {"appliedTasks" : appliedTasks, "completedTasks" : completedTasks, "createdTasks" : createdTasks}
+
+}
 
 module.exports.getMsgtokenByUser_id_p = (user_id)=>{
     return new Promise((resolve, reject) => {

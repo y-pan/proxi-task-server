@@ -70,13 +70,25 @@ taskRouter.get('/testall',(req,res)=>{
                 .then((data)=>{ res.json({"data":data})})
                 .catch((err) =>{ res.json({"err":err})})
 });
-// 1.3 GET: [api-root]/createdTask       my created task 
+// 1.3 GET: [api-root]/mycreated       my created task 
 taskRouter.get('/mycreated', (req, res) => {
+    // here  user_id is task-owner's user_id
     Task.getTasksByUserId_p(req.decodedToken.user_id)
                 .catch((err) =>{ res.json({"err":err}); return;})
                 .then((data)=>{ res.json({"data":data}); return;})
 });
-
+// 1.9 GET: myapplied   my applied task
+taskRouter.get('/myapplied', (req, res) => {
+    Task.getTasksByCandidateId_p(req.decodedToken.user_id)
+                .catch((err) =>{ res.json({"err":err}); return;})
+                .then((data)=>{ res.json({"data":data}); return;})
+});
+// 2.0 GET: my completed
+taskRouter.get('/mycompleted', (req, res) => {
+    Task.getTasksCompleted_p(req.decodedToken.user_id)
+                .catch((err) =>{ res.json({"err":err}); return;})
+                .then((data)=>{ res.json({"data":data}); return;})
+});
 // 1.4 GET:  [api-root]/searchTasks?lat=43.6753089&lon=-79.459126&distance=50
 taskRouter.get('/search', (req, res) => {
 

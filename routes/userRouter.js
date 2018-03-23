@@ -3,15 +3,31 @@ const vars = require('../config/vars');
 const lib = require('../lib/lib1');
 const express = require('express');
 const userRouter = express.Router();
-
-
-const User = require('../models/user');    // user mongoose model
-
-const Task = require('../models/task');  // user will join task 
 const firebaseManager = require('../lib/firebaseManager');
+const User = require('../models/user');    // user mongoose model
+const Task = require('../models/task');  // user will join task 
+
+// u1: login server after login firebase
+
+userRouter.post('/login',(req, res) => {
+    // so we have decoded
+    User.login(req.decodedToken).then((data) => {
+        res.json(data); 
+    /* 
+    {
+        appliedTasks:[{id:id,name:name}],
+        completedTasks: [{id:id,name:name}],
+        createdTasks:[{id:id,name:name}]
+    }
+    */
+    }).catch((err) => {
+        res.json({err:err});
+    })
+});
 
 
-// -------------------------- end: firebase db connection ------------------
+
+
 // -------------------------- user/task in mongo,  firebase???
 userRouter.get('/', (req, res) => {
     // res.status(200);
