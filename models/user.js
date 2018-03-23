@@ -3,7 +3,7 @@
 const vars = require('../config/vars');
 const mongoose = require('mongoose');
 // const Event = require('./event');
-const Lib = require('../lib/lib1');
+const Lib = require('../lib/lib1'); //Primary location and distance calculation library
 const UserSchema = mongoose.Schema({
     user_id:{type:String}                   /* firebase uid*/ 
     ,msgToken:{type:String, default:""} /* firebaseInstanceIdToken, so client can ask server to send notification message to other people based on user_id from idToken*/
@@ -14,13 +14,13 @@ const UserSchema = mongoose.Schema({
     ,taskApplied:{type:[String], default:[]}        /** my applied task-id */
     ,taskCompleted:{type:[String], default:[]}      /** my completed task-id */
     ,taskCreated:{type:[String], default:[]}        /** my created task-id */
-    ,isAdmin:{type:Boolean, default:false}
+    ,isAdmin:{type:Boolean, default:false} /** check to see if user is an admin */
 },{collection:'user'});
 
-const User = module.exports = mongoose.model('user',UserSchema);
+const User = module.exports = mongoose.model('user',UserSchema); 
 
 
-module.exports.login = (decodedToken) =>{
+module.exports.login = (decodedToken) =>{ 
     let user_id = decodedToken.user_id;
     let email = decodedToken.email;
     
@@ -29,7 +29,7 @@ module.exports.login = (decodedToken) =>{
             if(err){
                 reject(err);
             }else{
-                if(!data){
+                if(!data){ 
                     // create new user doc
                     let _user = {} 
                     _user.user_id = user_id;
@@ -75,7 +75,7 @@ module.exports.getMsgtokenByUser_id_p = (user_id)=>{
     });
 };
 
-module.exports.addUser_p = (newUser) =>{   
+module.exports.addUser_p = (newUser) =>{   //New User Registration
     return new Promise((resolve, reject) =>{
         newUser.save((err,data) =>{
             if(err){
@@ -87,14 +87,15 @@ module.exports.addUser_p = (newUser) =>{
     })
 };
 
-module.exports.upSertUser_p = (newUser) => {
+module.exports.upSertUser_p = (newUser) => {  //UPDATE if exists, INSERT new if does not exist
     return new Promise((resolve, reject)=>{
         if(!newUser.msgToken || !newUser.user_id){
             reject("missing critical info");
         }
         User.findOneAndUpdate({user_id:user_id},newUser,{ upsert: true }, (err, data)=>{
-            if(err) {reject(err); }
-            else{
+            if(err) {
+                reject(err);
+            }else{
                 resolve(data);
             }
         });
@@ -126,7 +127,7 @@ module.exports.updateUserMsgTokenByUser_id_p = (user_id, body) => {
 
 
 // ================================ rest are callback, not in use, I like promise =========
-module.exports.findAll = (callback) =>{
+module.exports.findAll = (callback) =>{ 
     User.find({},callback);
 };
 
