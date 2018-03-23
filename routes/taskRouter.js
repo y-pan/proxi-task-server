@@ -115,10 +115,12 @@ taskRouter.get('/search', (req, res) => {
             // check distance
             for(let i=0; i<data.length; i++){
                 let _t = data[i];
+                console.log("@@@ check1 task distance: " + _t)
+
                 if(_t.state == 0 || _t.state == null || _t.state == undefined){
                     if(user_id == _t.user_id) { continue; // user won't see own tasks}
                         let dis = lib.getDistanceFromLatLon(lat,lon,_t.lat,_t.lon);
-                        console.log("@@@ check task distance: " + dis + " | task.radius=" + _t.radius)
+                        console.log("@@@ check2 task distance: " + dis + " | task.radius=" + _t.radius)
 
                         if( dis <= _t.radius){
                             tasks.push(_t);
