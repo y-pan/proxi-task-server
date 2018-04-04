@@ -14,6 +14,7 @@ const TaskSchema = mongoose.Schema({
     /** OWNER */
     user_id:{type:String, required:true} /* from idToken.uid, from header */
     ,user_email:{type:String, required: true} /* from idToken.email, from header */
+    ,phone:{type:String, default:""}
 
     /** WHAT */
     ,title:{type:String, required:true} /* Title of the event */

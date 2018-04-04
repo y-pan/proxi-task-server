@@ -38,78 +38,118 @@ userRouter.get('/', (req, res) => {
 // 2.1 POST create userId | msgtoken pair, in User collection,  
 // [header]: idToken, 
 // [body] : {msgToken: req.body.msgToken}
-userRouter.post('/storeToken', (req,res)=>{
+userRouter.post('/msgToken', (req,res)=>{
+    console.log("@@@@@@@@@@@@ [1] /msgToken : start @@@@@@@@@@@")
 
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
-    }
-    firebaseManager.admin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            let user_id = decodedToken.user_id;
-            let userJson = req.body.msgToken; // need token:
-            userJson.user_id = user_id;
-            let user = new User(userJson);
-            User.upSertUser_p(user)
-                .then(data => {
-                    res.json({"data":data});
-                })
-                .catch(err=>{
-                    res.json({"err":err});
+    let userJson = {}
+    userJson.user_id = req.decodedToken.user_id;
+    userJson.phone = req.decodedToken.phone || "";
+    userJson.email = req.decodedToken.email;
 
-                });
+    userJson.msgToken = req.body.msgToken; // need token
+    let user = new User(userJson);
+    console.log("@@@@@@@@@@@@ [2] user @@@@@@@@@@@")
+    console.log(user)
+    User.upSertUser_p(user)
+        .then(data => {
+            console.log("@@@@@@@@@@@@ [3] updated msgToken for user: @@@@@@@@@@@")
+            console.log(data)
+            res.json({"data":data});
         })
-        .catch(err =>{
-            console.log("------- invaild token --------")
+        .catch(err=>{
+            console.log("@@@@@@@@@@@@ [-3] failed upsertuser: @@@@@@@@@@@")
             console.log(err)
             res.json({"err":err});
-            return;
-        })
+        });
 })
 // 2.2  notify some other user
 // [header]: idToken, 
-// [body] : {user_id: user_id}
-userRouter.get('/notify', (req,res,next)=>{
+// [body] : {user_id: to_be_notified_user_id, title:tile, message: message}
+
+userRouter.post('/notify', (req,res,next)=>{
+    console.log('@@@@@@@@@@@@@ [1] notify start : @@@@@@@@@@@@@@@');
     let title = req.body.title || "New Message";
     let message = req.body.message || "This is testing message";
 
-    let idToken = req.get('idToken');
-    if(!idToken){
-        res.json({"err":"invalid token"});
-        return;
-    }
     let notify_userid = req.body.user_id;
     if(!notify_userid) {
-        res.json({"err":"invalid notify_userid"});
+        console.log('@@@@@@@@@@@@@ [-2] no notify_userid in requrest: ' + notify_userid);
+        res.json({"err":"Invalid user_id to be notified"});
         return;
     }
-    firebaseManager.admin.auth().verifyIdToken(idToken)
-        .then((decodedToken)=>{
-            User.getMsgtokenByUser_id_p(notify_userid)
-                .then(msgToken =>{
-                    let messageObj = {
-                        data: {
-                          title:title
-                         ,message:message
-                        },
-                        token: msgToken
-                      };
-                      firebaseManager.admin.messaging().send(messageObj)
-                            .then((response) => {
-                                // Response is a message ID string.
-                                console.log('Successfully sent message', response);
-                                res.json({data:"Message sent successfully."})
-                            })
-                            .catch((error) => {
-                                console.log('Error sending message:', error);
-                                res.json({data:"Failed to send message."})
-                            });
-                })
+    console.log('@@@@@@@@@@@@@ [2] notify_userid = ' + notify_userid);
+
+    User.getMsgtokenByUser_id_p(notify_userid)
+        .then(msgToken =>{
+            let messageObj = {
+                data: {
+                    title:title
+                    ,message:message
+                },
+                token: msgToken
+            };
+            console.log('@@@@@@@@@@@@@ [3] Prepare message : @@@@@@@@@@@@@@@');
+            console.log(messageObj);
+            firebaseManager.admin.messaging().send(messageObj)
+                    .then((response) => {
+                        // Response is a message ID string.
+                        console.log('@@@@@@@@@@@@@ [4] Successfully sent message : @@@@@@@@@@@@@@@');
+                        console.log(response);
+                        res.json({data:"Message sent successfully."})
+                    })
+                    .catch((err) => {
+                        console.log('@@@@@@@@@@@@@ [-4] Error sending message : @@@@@@@@@@@@@');
+                        console.log(err)
+                        res.json({err:"Failed to send message."})
+                    });
         }).catch(err => {
-            res.json({"err":"error"});
+            console.log('@@@@@@@@@@@@@ [-3] Error: MsgToken not found @@@@@@@@@@@@@');
+            res.json({"err":"MsgToken not found"});
             return;
         })
 });
+
+
+// userRouter.get('/notify', (req,res,next)=>{
+//     let title = req.body.title || "New Message";
+//     let message = req.body.message || "This is testing message";
+
+//     let idToken = req.get('idToken');
+//     if(!idToken){
+//         res.json({"err":"invalid token"});
+//         return;
+//     }
+//     let notify_userid = req.body.user_id;
+//     if(!notify_userid) {
+//         res.json({"err":"invalid notify_userid"});
+//         return;
+//     }
+//     firebaseManager.admin.auth().verifyIdToken(idToken)
+//         .then((decodedToken)=>{
+//             User.getMsgtokenByUser_id_p(notify_userid)
+//                 .then(msgToken =>{
+//                     let messageObj = {
+//                         data: {
+//                           title:title
+//                          ,message:message
+//                         },
+//                         token: msgToken
+//                       };
+//                       firebaseManager.admin.messaging().send(messageObj)
+//                             .then((response) => {
+//                                 // Response is a message ID string.
+//                                 console.log('Successfully sent message', response);
+//                                 res.json({data:"Message sent successfully."})
+//                             })
+//                             .catch((error) => {
+//                                 console.log('Error sending message:', error);
+//                                 res.json({data:"Failed to send message."})
+//                             });
+//                 })
+//         }).catch(err => {
+//             res.json({"err":"error"});
+//             return;
+//         })
+// });
 
 module.exports = userRouter; 

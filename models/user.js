@@ -69,7 +69,8 @@ module.exports.getMsgtokenByUser_id_p = (user_id)=>{
             if(err){
                 reject(err);
             }else{
-                resolve(data.msgToken);
+                if(!data || !data.msgToken){reject("MsgToken Not Found.")}
+                else{ resolve(data.msgToken);} /** only return msgToken, not whole user object */
             }
         }); 
     });
