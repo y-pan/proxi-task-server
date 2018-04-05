@@ -17,13 +17,14 @@ const UserSchema = mongoose.Schema({
     ,isAdmin:{type:Boolean, default:false} /** check to see if user is an admin */
 },{collection:'user'});
 
-const User = module.exports = mongoose.model('user',UserSchema); 
-
+const User = module.exports = mongoose.model('user',UserSchema); // creating variable for user schema
 
 module.exports.login = (decodedToken) =>{ 
     let user_id = decodedToken.user_id;
     let email = decodedToken.email;
     
+// ================================ Promise methods, currently in use (preferred over callbacks) =========
+
     return new Promise((resolve, reject)=>{
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err){
@@ -88,7 +89,7 @@ module.exports.addUser_p = (newUser) =>{   //New User Registration
     })
 };
 
-module.exports.upSertUser_p = (newUser) => {  //UPDATE if exists, INSERT new if does not exist
+module.exports.upSertUser_p = (newUser) => {  //UPDATE if exists, INSERT new if does not exist, thus 'upSert'
     return new Promise((resolve, reject)=>{
         if(!newUser.msgToken || !newUser.user_id){
             reject("missing critical info");
@@ -126,7 +127,6 @@ module.exports.updateUserMsgTokenByUser_id_p = (user_id, body) => {
     });
 };
 
-
 // ================================ rest are callback, not in use, I like promise =========
 module.exports.findAll = (callback) =>{ 
     User.find({},callback);
@@ -141,7 +141,6 @@ module.exports.addUser = (newUser, callback) =>{
 //     // obj = {"age":age};
 //     User.findOne(obj,cb);
 // }
-
 
 module.exports.getUserByQueryJson = (jsonObject, callback)=>{
     const query = jsonObject;
@@ -169,7 +168,6 @@ module.exports.getUserByEmail_p = (email) =>{
         });
     });
 }
-
 
 module.exports.getUserById = (id,callback)=>{
     User.findById(id, callback); // id refers to _id. When mongodb saves an data object(document) into collection, it creats unique _id within the document, as an additional attribute

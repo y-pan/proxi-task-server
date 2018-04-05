@@ -101,6 +101,7 @@ module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
     });
 };
 
+//Findall tasks by search criteria
 module.exports.getTasksByUserId_p = (user_id)=>{ //Find all tasks hosted by a specific user_id
     return new Promise((resolve,reject) =>{
         Task.find({user_id:user_id}, (err,data)=>{
@@ -146,7 +147,8 @@ module.exports.updateTask_p = (newTask) =>{ //Find a specific task and update it
     });
 };
 
-module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ //
+
+module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Offer task as an owner (cannot offer to self)
     return new Promise((resolve, reject) =>{
         Task.findById({"_id" : taskId}, (err, data) =>{
             if(err){reject(err);}
@@ -177,7 +179,8 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ //
     });
 }
 
-module.exports.applyTask = (taskId, candidate_user_id) =>{ //Apply to a task as a candidate
+
+module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as a candidate (cannot offer to self)
     return new Promise((resolve, reject) =>{
 
         Task.findById({"_id":taskId}, (err, data) => {
