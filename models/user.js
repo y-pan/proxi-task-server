@@ -17,7 +17,7 @@ const UserSchema = mongoose.Schema({
     ,isAdmin:{type:Boolean, default:false} /** check to see if user is an admin */
 },{collection:'user'});
 
-const User = module.exports = mongoose.model('user',UserSchema); // creating variable for user schema
+const User = module.exports = mongoose.model('user',UserSchema); // creates variables for user schema
 
 module.exports.login = (decodedToken) =>{ 
     let user_id = decodedToken.user_id;
@@ -77,7 +77,7 @@ module.exports.getMsgtokenByUser_id_p = (user_id)=>{
     });
 };
 
-module.exports.addUser_p = (newUser) =>{   //New User Registration
+module.exports.addUser_p = (newUser) =>{       //New User Registration
     return new Promise((resolve, reject) =>{
         newUser.save((err,data) =>{
             if(err){
@@ -89,7 +89,7 @@ module.exports.addUser_p = (newUser) =>{   //New User Registration
     })
 };
 
-module.exports.upSertUser_p = (newUser) => {  //UPDATE if exists, INSERT new if does not exist, thus 'upSert'
+module.exports.upSertUser_p = (newUser) => {    //UPDATE if exists, INSERT new if does not exist, thus 'upSert'
     return new Promise((resolve, reject)=>{
         if(!newUser.msgToken || !newUser.user_id){
             reject("missing critical info");
