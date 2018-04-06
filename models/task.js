@@ -45,7 +45,7 @@ const TaskSchema = mongoose.Schema({
         1: owner maked job offer a candidate(candate need to login & apply it first, then owner can provide offer to 1 candidate), 
         2: candidate accepted offer => "candidate_hired" get populated (firebase notify owner for offer accepted), task will get locked (stop receiving new candidates)
                                      owner's points (price of task)
-           if candidate reject offer, state change back to 0 (firebase notify owner).   
+           if a candidate rejects offer, state change back to 0 (firebase notify owner).   
            owner can cancel offer before it is accepted by candidate (firebase notify .
         3: candidate claims task completed  => candidate press "complete" button, firebase notifys owner task completion
             if candidate didn't complete task (abort), state change back to 0 (firebase notify owner)
@@ -101,7 +101,7 @@ module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
     });
 };
 
-//Findall tasks by search criteria
+//Find all tasks by search criteria
 module.exports.getTasksByUserId_p = (user_id)=>{ //Find all tasks hosted by a specific user_id
     return new Promise((resolve,reject) =>{
         Task.find({user_id:user_id}, (err,data)=>{
@@ -119,7 +119,7 @@ module.exports.getTasksByCandidateId_p = (user_id)=>{ //Find all tasks in which 
     });
 };
 
-// get task that completed
+// get task that are completed
 module.exports.getTasksCompleted_p = (user_id)=>{  //Find all tasks that are completed by a specific user_id
     console.log("user_id: " + user_id);
     return new Promise((resolve,reject) =>{
@@ -170,7 +170,7 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                             reject("Error: Candidate have to apply first, then you can make the offer.")
                         }
                     }else{
-                        // task already offered
+                        // task is already offered
                         reject("Error: Task is already offered to someone, you cannot offer same task to others!")
                     }
                 }
