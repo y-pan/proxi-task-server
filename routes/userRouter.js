@@ -34,6 +34,15 @@ userRouter.get('/', (req, res) => {
     res.json({"data":"userRouter"}); }
 );
 
+/** this is made for debugging FCM */
+userRouter.get('/all', (req, res) => {
+    // res.status(200);
+    User.findAll_p().then(data =>{
+        res.json({"data":data}); }
+    ).catch(err => {
+        res.json({"err":err});
+    })
+});
 
 // 2.1 POST create userId | msgtoken pair, in User collection,  
 // [header]: idToken, 

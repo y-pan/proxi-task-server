@@ -15,6 +15,8 @@ const UserSchema = mongoose.Schema({
     ,taskCompleted:{type:[String], default:[]}      /** my completed task-id */
     ,taskCreated:{type:[String], default:[]}        /** my created task-id */
     ,isAdmin:{type:Boolean, default:false} /** check to see if user is an admin */
+
+    ,count:{type:Number, default:0}
 },{collection:'user'});
 
 const User = module.exports = mongoose.model('user',UserSchema); // creates variables for user schema
@@ -128,8 +130,17 @@ module.exports.updateUserMsgTokenByUser_id_p = (user_id, body) => {
 };
 
 // ================================ rest are callback, not in use, I like promise =========
-module.exports.findAll = (callback) =>{ 
-    User.find({},callback);
+module.exports.findAll_p = (callback) =>{ 
+    return new Promise((resolve, reject) =>{
+        User.find({},(err, data) =>{
+            if(err){
+                reject(err);
+            }else{
+                resolve(data);
+            }
+        });
+    })
+    
 };
 
 module.exports.addUser = (newUser, callback) =>{
@@ -203,61 +214,3 @@ module.exports.deleteUserById = (id, callback) => {
         })}
     });
 };
-
-// module.exports.updateGps = (email,lat,lon,code,callback) =>{
-    
-//     Promise.all([User.getUserByEmail_p(email), Event.getEventByCode_p(code)]).then(responses=>{
-//         let _user = responses[0];
-//         let _event = responses[1];
-//         //console.log("\n+++++++++++++++++++\n" + _user);
-//         //console.log("\n*******************\n" + _event);
-//         // now to calculate distance of 
-//         _user.save()
-
-//         _user.loc = [lat,lon];
-//         _user.save((err, user) =>{
-//             if(err) {callback(err,null); }
-//             else{ 
-//                 //callback(null, user); 
-//                 //get distance
-//                 // Lib to do distance _user.loc and _event.loc  !!!!!!!!!!!!!!!
-//             }
-//         })
-//     }).catch(errors => {
-//         callback("Some error happened", null);
-//     })
-/*
-    User.getUserByEmail_p(email).then((user)=>{
-        //callback(null,user);
-        let _user = user;
-        // save to db
-        console.log("user not yet saved to db");
-        Event.getEventByCode_p(code).then((event)=>{
-            console.log("+++++++++++++++++++" + _user);
-            console.log("*******************" + event);
-        }).catch((err) =>{ callback(err,null)})
-    }).catch((err)=>{
-        callback(err,null);
-    })*/
-// } 
-
-//(callback(null,data)).catch(callback("error",null));
-    /*
-    User.getUserByEmail(email,(err,userFound)=>{
-        if(err){ callback(vars.MSG.ERROR_CONNECTION, null); }
-        else if(!userFound) { callback(vars.MSG.ERROR_NOTFOUND, null); }
-        else{
-            //callback(null, userFound);
-            // so user fould, update user gps
-            userFound.loc = [lat,lon];
-            userFound.save((err, userFound) =>{
-                if(err) {callback(err,null); }
-                else{ 
-                    callback(null, userFound); 
-                
-                }
-            })
-            
-        }
-       
-    }) ;*/
