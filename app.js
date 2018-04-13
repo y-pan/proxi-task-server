@@ -65,12 +65,10 @@ function checkIdTokenFirst(req, res, next){
         })
 }
 
-app.use(checkIdTokenFirst)
-
+app.use(checkIdTokenFirst);
 
 app.use('/api/task',taskRouter); //    {root}/api/task will go for taskRouter
 app.use('/api/user',userRouter); //    {root}/api/user  for user, msgToken,...
-
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~ dev debug routes : start ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,7 +81,8 @@ app.post('/test/reg_fcmIdToken', (req, res) =>{
     let token = req.body.token;
     res.json({"data":"test msg: user_id="+user_id +"token="+ token})
     // res.send("I got your: user_id="+user_id + " | token=" + token);
-})
+});
+
 
 app.post('/test/msg', (req,res,next)=>{
     let title = req.body.title ||  "ProxiTask message";
@@ -146,10 +145,6 @@ app.get('/*', (req, res)=>{
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~ dev debug routes : end ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
 app.listen(app.get('port'), '0.0.0.0', ()=>{
     console.log("[OK] App is running: port=" + app.get('port') + ", mongoDbConnectionNum=" + vars.mongoDbConnectionNum + ", firebaseSdkNum=" + vars.firebaseSdkNum);
 });
-
-
