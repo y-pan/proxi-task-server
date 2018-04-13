@@ -18,24 +18,24 @@ const TaskSchema = mongoose.Schema({
 
     /** WHAT */
     ,title:{type:String, required:true} /* Title of the event */
-    ,description:{type:String} /*Description of th event */
-    ,subtitle:{type:String} /*Subtitle of the event */
-    ,price:{type:Number} /* task point to be transfered from owner to candidate once task is done */
+    ,description:{type:String, default:""} /*Description of th event */
+    ,subtitle:{type:String, default:""} /*Subtitle of the event */
+    ,price:{type:Number, default:1} /* task point to be transfered from owner to candidate once task is done */
 
     /** WHERE */
-    ,lat:{type:Number} /* Latitude of the event */
-    ,lon:{type:Number} /* Longitude of the event */
-    ,address:{type:String}  /* owner need to type address. Can android get gps[lat, lon] out of address? what if publisher is not at job location? */
-    ,radius:{type:Number}  /* radius, within radius will be marked as attended, within valid duration */
+    ,lat:{type:Number, default:""} /* Latitude of the event */
+    ,lon:{type:Number, default:""} /* Longitude of the event */
+    ,address:{type:String, default:""}  /* owner need to type address. Can android get gps[lat, lon] out of address? what if publisher is not at job location? */
+    ,radius:{type:Number, default:10}  /* radius, within radius will be marked as attended, within valid duration */
 
     /** WHEN */
-    ,date:{type:String} /* ddmmyyyy, start date of task, host/admin will postpond task by changing date, search task might need to filter if date expired or not */
-    ,startTime:{type:String} /*The start time of the event */
-    ,endTime:{type:String} /*The end time of the event */
+    ,date:{type:String, default:""} /* ddmmyyyy, start date of task, host/admin will postpond task by changing date, search task might need to filter if date expired or not */
+    ,startTime:{type:String, default:""} /*The start time of the event */
+    ,endTime:{type:String, default:""} /*The end time of the event */
 
     /** WHO */
     ,candidates:{type:[String]}  /* candidates' id from idToken.uid or idToken.user_id*/
-    ,candidate_hired:{type:String} /* 1 candidate's id who is hired by owner */
+    ,candidate_hired:{type:String, default:""} /* 1 candidate's id who is hired by owner */
  
     /* TASK STATE */
     ,state:{type:Number, default:0} 
@@ -53,7 +53,6 @@ const TaskSchema = mongoose.Schema({
             if owner claims task not completed, state change to -4 (admin person will get involved for dispute)
         -1: admin person terminates/suspends task (firebase notify owner)
         */
-    ,coins:{type:Number,default:1}
 
 },{collection:'task'});
 // taskStartTime:{type: Date, default: Date.now},
