@@ -16,6 +16,7 @@ const UserSchema = mongoose.Schema({
     ,taskCreated:{type:[String], default:[]}        /** my created task-id */
     ,isAdmin:{type:Boolean, default:false} /** check to see if user is an admin */
 
+    ,coins:{type:Number, default:50}
     ,count:{type:Number, default:0}
 },{collection:'user'});
 

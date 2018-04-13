@@ -53,6 +53,7 @@ const TaskSchema = mongoose.Schema({
             if owner claims task not completed, state change to -4 (admin person will get involved for dispute)
         -1: admin person terminates/suspends task (firebase notify owner)
         */
+    ,coins:{type:Number,default:1}
 
 },{collection:'task'});
 // taskStartTime:{type: Date, default: Date.now},
