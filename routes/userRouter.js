@@ -9,7 +9,7 @@ const Task = require('../models/task');  // user will join task
 
 // u1: login server after login firebase
 
-userRouter.post('/login',(req, res) => {
+userRouter.get('/login',(req, res) => {
     // so we have decoded
     User.login(req.decodedToken).then((data) => {
         res.json({data:data}); 
