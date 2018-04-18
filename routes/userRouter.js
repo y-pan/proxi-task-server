@@ -26,7 +26,7 @@ userRouter.get('/login',(req, res) => {
 });
 
 /** get user's own info */
-userRouter.get('/user', (req, res) =>{
+userRouter.get('/', (req, res) =>{
     let user_id = req.decodedToken.user_id;
     console.log("get current user: "+user_id)
 
@@ -37,7 +37,7 @@ userRouter.get('/user', (req, res) =>{
     })
 })
 
-userRouter.get('/user/:user_id', (req, res) =>{
+userRouter.get('/:user_id', (req, res) =>{
     let user_id = req.params.user_id;
     console.log("get other user: "+user_id)
     User.getUserByUserId_p(user_id).then((data)=>{
@@ -47,7 +47,7 @@ userRouter.get('/user/:user_id', (req, res) =>{
     })
 })
 
-userRouter.post('/user/update', (req, res) =>{
+userRouter.post('/update', (req, res) =>{
     let infoJson = {}
     infoJson.user_id = req.decodedToken.user_id;
     infoJson.name = req.body.name;
@@ -63,10 +63,10 @@ userRouter.post('/user/update', (req, res) =>{
 })
 
 // -------------------------- user/task in mongo,  firebase???
-userRouter.get('/', (req, res) => {
-    // res.status(200);
-    res.json({"data":"userRouter"}); }
-);
+// userRouter.get('/', (req, res) => {
+//     // res.status(200);
+//     res.json({"data":"userRouter"}); }
+// );
 
 /** this is made for debugging FCM */
 userRouter.get('/all', (req, res) => {
