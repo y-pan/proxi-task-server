@@ -27,7 +27,7 @@ taskRouter.post('/add', (req, res) => {
     let user_id = req.decodedToken.user_id;
     let user_email = req.decodedToken.email;
     
-    let taskJson = req.body;
+    let taskJson = req.body; /** so all attribute from req.body will be accepted for now for simple, and user_id and user_email are from idToken*/
     taskJson.user_id = user_id;
     taskJson.user_email = user_email;
     let newTask = new Task(taskJson);
@@ -56,7 +56,7 @@ taskRouter.post('/add', (req, res) => {
 
 // 1.2 GET: [api-root]/tasks       admin get all tasks
 taskRouter.get('/all',(req,res)=>{
-    if(!lib.validateAdmin(req.decodedToken)){// checking admin is kind of hardcoded 
+    if(!lib.validateAdmin(req.decodedToken)){/* checking admin is only looking at if email == proxitaskproject@gmail.com */
         res.json({"err":"invalid admin token"});
         return;
     }
@@ -65,7 +65,8 @@ taskRouter.get('/all',(req,res)=>{
         .then((data)=>{ res.json({"data":data})})
         .catch((err) =>{ res.json({"err":err})})
 });
-taskRouter.get('/testall',(req,res)=>{
+
+taskRouter.get('/testall',(req,res)=>{ /** this is only for debugging purpose, act like admin can see all task list !!! */
     Task.findAll_p()
                 .then((data)=>{ res.json({"data":data})})
                 .catch((err) =>{ res.json({"err":err})})

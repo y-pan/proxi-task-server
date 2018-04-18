@@ -11,12 +11,14 @@ const UserSchema = mongoose.Schema({
     // ,password:{type:String}          /** if from firebase, this will be null */
     ,name:{type:String, default:""}                 /** firebase name, user can reset it */
     ,phone:{type:String, default:""}                /** firebase number, user can reset it */
-    ,taskApplied:{type:[String], default:[]}        /** my applied task-id */
-    ,taskCompleted:{type:[String], default:[]}      /** my completed task-id */
-    ,taskCreated:{type:[String], default:[]}        /** my created task-id */
+    
+    ,taskApplied:{type:[String], default:[]}        /** task-ids that I applied  */
+    ,taskHired:{type:[String], default:[]}          /** task-ids that I was hired */
+    ,taskCompleted:{type:[String], default:[]}      /** task-ids that I've completed  */
+    ,taskCreated:{type:[String], default:[]}        /** task-ids that I created  */
     ,isAdmin:{type:Boolean, default:false} /** check to see if user is an admin */
 
-    ,coins:{type:Number, default:50}
+    ,money:{type:Number, default:50}
     ,count:{type:Number, default:0}
 },{collection:'user'});
 
@@ -25,7 +27,7 @@ const User = module.exports = mongoose.model('user',UserSchema); // creates vari
 module.exports.login = (decodedToken) =>{ 
     let user_id = decodedToken.user_id;
     let email = decodedToken.email;
-    
+    let name = decodedToken.name;
 // ================================ Promise methods, currently in use (preferred over callbacks) =========
 
     return new Promise((resolve, reject)=>{
@@ -38,6 +40,7 @@ module.exports.login = (decodedToken) =>{
                     let _user = {} 
                     _user.user_id = user_id;
                     _user.email = email;
+                    _user.name = name;
                     let _User = new User(_user);
                     _User.save((_err, _data) =>{
                         if(err){

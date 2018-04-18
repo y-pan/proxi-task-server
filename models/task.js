@@ -20,7 +20,9 @@ const TaskSchema = mongoose.Schema({
     ,title:{type:String, required:true} /* Title of the event */
     ,description:{type:String, default:""} /*Description of th event */
     ,subtitle:{type:String, default:""} /*Subtitle of the event */
-    ,price:{type:Number, default:1} /* task point to be transfered from owner to candidate once task is done */
+    ,price:{type:Number, default:1} /* in task point to be transfered from owner to candidate once task is done
+        in user doc, there is "money" attribute
+    */
 
     /** WHERE */
     ,lat:{type:Number, default:""} /* Latitude of the event */
@@ -136,7 +138,7 @@ module.exports.updateTask_p = (newTask) =>{ //Find a specific task and update it
         console.log("-- in mongoose : "+newTask);
         let _id = newTask._id;
         delete newTask._id
-
+        
         Task.findOneAndUpdate({"_id":_id}, newTask,{new: true}, (err, data) => {
             if(err){
                 reject(err);
