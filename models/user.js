@@ -28,7 +28,6 @@ module.exports.login = (decodedToken) =>{
     let user_id = decodedToken.user_id;
     let email = decodedToken.email;
     let name = decodedToken.name;
-// ================================ Promise methods, currently in use (preferred over callbacks) =========
 
     return new Promise((resolve, reject)=>{
         User.findOne({user_id:user_id}, (err, data)=>{
@@ -36,39 +35,108 @@ module.exports.login = (decodedToken) =>{
                 reject(err);
             }else{
                 if(!data){ 
-                    // create new user doc
-                    let _user = {} 
-                    _user.user_id = user_id;
-                    _user.email = email;
-                    _user.name = name;
-                    let _User = new User(_user);
+                    /* create new user doc if not existing */
+                    let userJson = {} 
+                    userJson.user_id = user_id;
+                    userJson.email = email;
+                    userJson.name = name;
+
+                    let _User = new User(userJson);
                     _User.save((_err, _data) =>{
                         if(err){
                             reject(_err)
                         }else{
-                            resolve(_data)
+                            if(!_data){
+                                reject("Unknow error, try login again!");
+                            }else{
+                                resolve(_data) /** return  */
+                            }
                         }
                     });
                 }else{
-                    if(data.email != email){
-                        data.email = email;
-                        data.save((__err, __data)=>{
-                            if(__err){reject(__err);}
-                            else{ resolve(__data);}
-                        })
-                    }
-                    else{resolve(data);}
+                    resolve(data); /** just return the existing User data, not going to update user here */
                 }
             }
         })
     });
-    
-    // when user login succeeded via Firebase on Android, user will do here
-    // upsert user
-
-    // get server profile for {"appliedTasks" : appliedTasks, "completedTasks" : completedTasks, "createdTasks" : createdTasks}
-
 }
+
+
+module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from firebase idToken */
+    return new Promise((resolve, reject) => {
+        User.findOne({user_id:user_id}, (err, data)=>{
+            if(err){
+                reject(err);
+            }else{
+                if(!data){
+                    reject("User not found");
+                }else{
+                    resolve(data); /** data is user */
+                }
+            }
+        });
+    });
+};
+
+module.exports.updateUser = (infoJson) => {
+    return new Promise((resolve,reject)=>{
+        User.findOne({user_id : infoJson.user_id}, (err, userFound)=>{
+            if(err){ 
+                reject(err);
+            }
+            else {
+                if(!userFound){
+                    reject("User not found, try login again!");
+                }else{
+                    userFound.name = infoJson.name || userFound.name;
+                    userFound.phone = infoJson.phone || userFound.phone;
+                    userFound.address = infoJson.address || userFound.loc;
+        
+                    userFound.save((err, _data) =>{
+
+                        if(err) {
+                            reject(err)
+                        }
+                        else if(!_data){
+                            reject("Unknow error, try again");
+                        }else{
+                            resolve(_data);
+                        }
+                    })
+                }
+            }
+        })    
+    });
+};
+
+
+
+
+
+
+
+
+/**========================== the following are not in use for now due to development time limited ================ */
+
+module.exports.updateUserById = (id, body, callback) => {
+    User.findById(id, (err, userFound)=>{
+        if(err){ 
+            callback(vars.MSG.ERROR_CONNECTION, null);
+        }
+        else {
+            userFound.name = body.name || userFound.name;
+            userFound.number = body.number || userFound.number;
+            userFound.email = body.email || userFound.email;
+            userFound.eventCodes = body.eventCodes || userFound.eventCodes;
+            userFound.loc = body.loc || userFound.loc;
+
+            userFound.save((err, userFound) =>{
+                if(err) {callback(vars.MSG.ERROR_CONNECTION, null); }
+                else{ callback(null, userFound); }
+            })
+        }
+    })    
+};
 
 module.exports.getMsgtokenByUser_id_p = (user_id)=>{
     return new Promise((resolve, reject) => {
@@ -184,29 +252,7 @@ module.exports.getUserByEmail_p = (email) =>{
     });
 }
 
-module.exports.getUserById = (id,callback)=>{
-    User.findById(id, callback); // id refers to _id. When mongodb saves an data object(document) into collection, it creats unique _id within the document, as an additional attribute
-};
 
-module.exports.updateUserById = (id, body, callback) => {
-    User.findById(id, (err, userFound)=>{
-        if(err){ 
-            callback(vars.MSG.ERROR_CONNECTION, null);
-        }
-        else {
-            userFound.name = body.name || userFound.name;
-            userFound.number = body.number || userFound.number;
-            userFound.email = body.email || userFound.email;
-            userFound.eventCodes = body.eventCodes || userFound.eventCodes;
-            userFound.loc = body.loc || userFound.loc;
-
-            userFound.save((err, userFound) =>{
-                if(err) {callback(vars.MSG.ERROR_CONNECTION, null); }
-                else{ callback(null, userFound); }
-            })
-        }
-    })    
-};
 
 module.exports.deleteUserById = (id, callback) => {
     User.findById(id, (err, userFound)=>{

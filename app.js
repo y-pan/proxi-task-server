@@ -17,7 +17,7 @@ const userRouter = require('./routes/userRouter');
  *  So no need to change value before deploying heroku
  */
 
- if(process.env.proxiTaskOnHeroku){
+if(process.env.proxiTaskOnHeroku){ /** override settings in vars */
     vars.mongoDbConnectionNum = 0
     vars.firebaseSdkNum = 0
 }
@@ -25,11 +25,20 @@ const userRouter = require('./routes/userRouter');
 
 // ------------------------ start: mongo db connection --------------------
 mongoose.Promise = global.Promise;
-let conn = lib.getMongoDbConnection(vars.mongoDbConnectionNum)
-mongoose.connect(lib.getMongoDbConnection(vars.mongoDbConnectionNum)).then(()=>{
-   console.log('[OK] MongoDB connection:'+ vars.mongoDbConnectionNum);    
+let connNum = vars.mongoDbConnectionNum;
+let connDesc = "";
+
+if(connNum - 0 == 0){
+    connDesc = "mlab - specified from env";
+}else if(connNum - 0 == 1){
+    connDesc = "mlab - specified from secret file";
+}else{
+    connDesc = "local mongodb";
+}
+mongoose.connect(lib.getMongoDbConnection(connNum)).then(()=>{
+   console.log('[OK] MongoDB connection:'+ connNum + "; description: " + connDesc);    
 }).catch((err)=>{
-   console.log('[ERROR] MongoDB connection:'+ vars.mongoDbConnectionNum + "; conn=" + conn);    
+   console.log('[ERROR] MongoDB connection:'+ connNum + "; description: " + connDesc);    
 });
 // -------------------------- end: mongo db connection --------------------
 firebaseManager.init(vars.firebaseSdkNum);
@@ -73,7 +82,7 @@ app.use('/api/user',userRouter); //    {root}/api/user  for user, msgToken,...
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~ dev debug routes : start ~~~~~~~~~~~~~~~~~~~~~~~~~~
 app.get('/', (req, res)=>{ 
-    res.json({"data":'ProxiTask server root: mongoDbConnectionNum='+vars.mongoDbConnectionNum +", firebaseSdkNum="+vars.firebaseSdkNum+'. Please go to /api'}); 
+    res.json({"data":'ProxiTask server root: mongoDbConnectionNum='+connNum +"; connDesc="+connDesc +", firebaseSdkNum="+vars.firebaseSdkNum+'. Please go to /api'}); 
 });
 
 app.post('/test/reg_fcmIdToken', (req, res) =>{
@@ -139,7 +148,7 @@ app.post('/test/auth', (req,res,next)=>{
 
 app.get('/*', (req, res)=>{ 
     // console.log('config ref...');
-    res.json({"data":'Hey, nothing here, go back ~~~'}); 
+    res.json({"err":'no such api!'}); 
 });
 
 
