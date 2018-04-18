@@ -11,7 +11,7 @@ const UserSchema = mongoose.Schema({
     // ,password:{type:String}          /** if from firebase, this will be null */
     ,name:{type:String, default:""}                 /** firebase name, user can reset it */
     ,phone:{type:String, default:""}                /** firebase number, user can reset it */
-    
+    ,address:{type:String, default:""}
     ,taskApplied:{type:[String], default:[]}        /** task-ids that I applied  */
     ,taskHired:{type:[String], default:[]}          /** task-ids that I was hired */
     ,taskCompleted:{type:[String], default:[]}      /** task-ids that I've completed  */
