@@ -54,7 +54,7 @@ userRouter.post('/update', (req, res) =>{
     infoJson.address = req.body.address;
     infoJson.phone = req.body.phone;
 
-    console.log("get other user: "+user_id)
+    console.log("get other user: "+ infoJson.user_id)
     User.updateUser(infoJson).then((data)=>{
         res.json({data:data});
     }).catch(err =>{
