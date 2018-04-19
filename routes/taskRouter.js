@@ -31,8 +31,11 @@ taskRouter.post('/add', (req, res) => {
     let taskJson = req.body; /** so all attribute from req.body will be accepted for now for simple, and user_id and user_email are from idToken*/
     taskJson.user_id = user_id;
     taskJson.user_email = user_email;
-    taskJson.price =  taskJson.price || 1;
-
+    taskJson.price = taskJson.price || 1;
+    if(taskJson.price * 1 != taskJson.price ||  taskJson.price <= 0){
+        res.json({err:"Task price should be >=1"});
+        return;
+    }
     let newTask = new Task(taskJson);
     // some exception prevention here -----------
     if(!lib.validateTask(newTask)) {
