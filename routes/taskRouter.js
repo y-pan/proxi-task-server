@@ -24,6 +24,7 @@ taskRouter.get('/', (req, res) => {
 
 // 1.1 User create task using POST: [api-root]/api/newTask   
 taskRouter.post('/add', (req, res) => {   
+    console.log("do task/add")
     let user_id = req.decodedToken.user_id;
     let user_email = req.decodedToken.email;
     
