@@ -84,6 +84,7 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
 /** helper method */
 module.exports.syncList = (user_id, taskId, attName, money) =>{
     return new Promise((resolve, reject)=>{
+        console.log("do user.syncList")
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err){reject(err);}
             else if(!data){ reject("No such user"); }

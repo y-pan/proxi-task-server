@@ -105,8 +105,9 @@ module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
             console.log(_udata);
             newTask.save((err,data)=>{
                 if(err){
-                    reject(err)
+                    reject("err when to save newTask: "+err)
                 }else{
+                    console.log("## to User.setCreated")
                     User.setCreated(data.user_id, data._id, (0 - data.price)).then(udata =>{
                         resolve(data)
                     }).catch(err => {
@@ -117,7 +118,7 @@ module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
             })
 
         }).catch(err => {
-            reject(err);
+            reject("looks like user doesn't have enough money: " + err);
         })
         
     });
