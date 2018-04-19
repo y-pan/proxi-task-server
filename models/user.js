@@ -80,9 +80,10 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
 };
 
 
-module.exports.setApplied = (user_id, taskId) =>{
+
+/** helper method */
+module.exports.syncList = (user_id, taskId, attName) =>{
     return new Promise((resolve, reject)=>{
-        let attName = "taskApplied";
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err){reject(err);}
             else if(!data){ reject("No such user"); }
@@ -92,16 +93,16 @@ module.exports.setApplied = (user_id, taskId) =>{
                 if( data[attName].indexOf(taskId) > 0){
                     // already hired, don't re-hire again
                     // console.log("## User.setHired done: User was already hired!");
-                    resolve("User was already hired!");
+                    resolve("User."+attName+" has the task in place!");
                 }else{
                     data[attName].push(taskId);
                     data.save((err, _data) =>{
                         if(err || !_data){
-                            console.log("## User.setHired done: Unknow error, no data returned")
+                            console.log("## Error when syncing user."+attName);
                             reject("## User.setHired done: Unknow error");
                         }else{
                             // console.log("## User.setHired done: Updated user to be hired successfuly!");
-                            resolve("Updated user to be hired successfuly!");
+                            resolve("Synced user." + attName + " successfuly!");
                         }
                     })
                 }
@@ -110,34 +111,16 @@ module.exports.setApplied = (user_id, taskId) =>{
     });
 }
 
-
+/** triggered by Task.applyTask */
+module.exports.setApplied = (user_id, taskId) =>{
+    return User.syncList(user_id, taskId, "taskApplied");
+}
+module.exports.setCreated = (user_id, taskId) =>{
+    return User.syncList(user_id, taskId, "taskCreated");
+}
+/** triggered by Task.offerTask */
 module.exports.setHired = (user_id, taskId) =>{
-    return new Promise((resolve, reject)=>{
-        User.findOne({user_id:user_id}, (err, data)=>{
-            if(err){reject(err);}
-            else if(!data){ reject("No such user"); }
-            else{
-                /** get user, update user.taskHired */
-                if( data.taskHired.indexOf(taskId) > 0){
-                    // already hired, don't re-hire again
-                    // console.log("## User.setHired done: User was already hired!");
-                    resolve("User was already hired!");
-                }else{
-                    data.taskHired.push(taskId);
-                    data.save((err, _data) =>{
-                        if(err || !_data){
-                            console.log(err)
-                            console.log("## User.setHired done: Unknow error, no data returned")
-                            reject("## User.setHired done: Unknow error");
-                        }else{
-                            // console.log("## User.setHired done: Updated user to be hired successfuly!");
-                            resolve("Updated user to be hired successfuly!");
-                        }
-                    })
-                }
-            }
-        })
-    });
+    return User.syncList(user_id, taskId, "taskHired");
 }
 
 module.exports.updateUser = (infoJson) => {

@@ -101,7 +101,25 @@ module.exports.findAll_p = () =>{ //Query for all tasks in the database
 };
 
 
+
 module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
+    return new Promise((resolve, reject) => {
+        newTask.save((err,data)=>{
+            if(err){
+                reject(err)
+            }else{
+                User.setCreated(data.user_id, data._id).then(udata =>{
+                    resolve(data)
+                }).catch(err => {
+                    console.log("[TransactionError] didn't sync up user.taskCreated");
+                    reject("[TransactionError] didn't sync up user.taskCreated");
+                })
+            }
+        })
+    });
+};
+
+module.exports.addTask_p_old = (newTask) =>{ //Add a single task to the database
     return new Promise((resolve, reject) => {
         newTask.save((err,data)=>{
             if(err){
