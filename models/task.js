@@ -344,8 +344,7 @@ module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ //user_id is ow
                     return;
                 }
                 if(data.state == 4){
-                    /** task is locked because owner hired someother, or suspended by admin */
-                    resolve("Task is already confirmed completed!");
+                    reject("Task is already confirmed completed!");
                     return;
                 }
                 if(data.state != 2 || data['candidate_hired'] == "" || !data['candidate_hired']){
