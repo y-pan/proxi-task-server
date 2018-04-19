@@ -89,16 +89,14 @@ module.exports.syncList = (user_id, taskId, attName, money) =>{
             if(err){reject(err);}
             else if(!data){ reject("No such user"); }
             else{
-                console.log(`${data['money']} - ${money} = `)
 
-                if(money && money-0 > 0){
+                if(money){
                     if(data['money'] === undefined){
                         data['money'] = money;
                     }else{
-                        data['money'] += money;
+                        data['money'] = data['money'] - 0 + money;
                     }
                 }
-                console.log(`${data['money']}`)
 
                 /** get user, update user.taskHired */
                 if(!data[attName]){data[attName] = []; /*in case of empty attribute */}
