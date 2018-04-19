@@ -101,7 +101,7 @@ module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
     return new Promise((resolve, reject) => {
 
         // check if user has money to create task, need to deduct task.price from user account
-        User.checkMoneyEnough(data.user_id, newTask.price).then(_udata =>{
+        User.checkMoneyEnough(newTask.user_id, newTask.price).then(_udata =>{
             console.log(_udata);
             newTask.save((err,data)=>{
                 if(err){
