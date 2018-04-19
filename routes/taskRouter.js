@@ -103,6 +103,40 @@ taskRouter.get('/search', (req, res) => {
     }
     // console.log("@@@ goe codes are ok..." )
 
+    Task.getApplicableTasks()
+        .catch((err) =>{ res.json({"err":err}); return;})
+        .then((data)=>{
+            let tasks = [];
+            let user_id = req.decodedToken.user_id;
+            if(!data){
+                res.json({"data":tasks}); return;
+            }
+            // check distance
+            for(let i=0; i<data.length; i++){
+                let _t = data[i];
+                if(user_id != _t.user_id) { /* user won't see own tasks*/
+                    let dis = lib.getDistanceFromLatLon(lat,lon,_t.lat,_t.lon);
+                    if( dis <= _t.radius){
+                        tasks.push(_t);
+                    }
+                } 
+            }
+            res.json({"data":tasks}); return;
+        })
+});
+
+taskRouter.get('/search_not_in_use', (req, res) => {
+
+    let lat = req.query.lat;
+    let lon = req.query.lon;
+    // console.log("@@@ searching by goe codes: " + lat + " | " + lon )
+
+    if(!lat || !lon){
+        res.json({"err":"invalid latitude/longitude"});
+        return;
+    }
+    // console.log("@@@ goe codes are ok..." )
+
     Task.findAll_p()
         .catch((err) =>{ res.json({"err":err}); return;})
         .then((data)=>{
@@ -134,7 +168,6 @@ taskRouter.get('/search', (req, res) => {
         })
 });
 
-
 // 1.5 POST user apply task created by other
 taskRouter.post('/apply', (req, res) => {
     console.log('do apply......')
@@ -155,9 +188,9 @@ taskRouter.post('/offer', (req, res) => {
     let candidate_user_id = req.body.candidate_user_id;
     let owner_user_id = req.decodedToken.user_id
     Task.offerTask(taskId, owner_user_id, candidate_user_id).then(data => {
-        res.json({data:data})
+        res.json({data:data[0]}); /** this data is from Promise.all(), which means it is an array resolved data from sub-promises accordingly */
     }).catch(err => {
-        res.json({err:err})
+        res.json({err:err});
     })
 })
 

@@ -9,6 +9,7 @@
 const vars = require('../config/vars');
 const lib = require('../lib/lib1');
 const mongoose = require('mongoose');
+const User = require('./user');
 
 const TaskSchema = mongoose.Schema({
     /** OWNER */
@@ -81,6 +82,15 @@ module.exports.getTaskById_p = (id) => { //Query for a single task based on _id
 };
 
 
+module.exports.getApplicableTasks = () =>{ //Query for all tasks in the database
+    return new Promise((resolve,reject)=>{
+        Task.find({"state":0},(err,data)=>{
+            if(err) reject(err);
+            resolve(data);
+        });
+    })
+};
+
 module.exports.findAll_p = () =>{ //Query for all tasks in the database
     return new Promise((resolve,reject)=>{
         Task.find({},(err,data)=>{
@@ -149,7 +159,7 @@ module.exports.updateTask_p = (newTask) =>{ //Find a specific task and update it
     });
 };
 
-
+/** use promise.all */
 module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Offer task as an owner (cannot offer to self)
     return new Promise((resolve, reject) =>{
         Task.findById({"_id" : taskId}, (err, data) =>{
@@ -157,12 +167,84 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
             else{
                 if(data.user_id != owner_user_id){
                     reject("Error: You're not the owner of the task! You cannot offer this task to anyone!");
+                    return;
                 }else{
+                    if(data.state == 2){
+                        reject("Error: Task is already offered to some applicant!");
+                        return;
+                    }
+                    /** now before changes, make a backup in case of rolling back */
+                    const taskJsonBackup = JSON.parse(JSON.stringify(data))
+                    console.log("## taskJsonBackup=>")
+                    console.log(taskJsonBackup)
                     if(data.candidate_hired == undefined || data.candidate_hired == null || data.candidate_hired ==""){
                         if(lib.arrayContains(data.candidates, candidate_user_id)){
                             // task not offered, candidate is in data.candidats, then can hire
                             data.candidate_hired = candidate_user_id;
-                            data.state += 1; //The task moves towards the next state, now considered 2 - candidate accepted offer
+                            data.state = 2; //The task moves towards the next state, now considered 2 - candidate accepted offer
+                            
+                            data.save((err, updatedTask) =>{
+                                if(err || !updatedTask){ 
+                                    reject("Error: failed to update task");
+                                    return;
+                                } else { 
+                                    console.log("## taskPromise OK, now update user doc...")
+                                    User.setHired(candidate_user_id, taskId).then(ud=>{
+                                        resolve(updatedTask);/** yes, the task */
+                                        return;
+                                    }).catch(ue =>{
+                                        /**what if user didn't get updated? roll back using _old_data */
+                                        data.candidate_hired = taskJsonBackup.candidate_hired;
+                                        data.state = taskJsonBackup.state
+                                        data.save((err, __data)=>{
+                                            if(err || !__data){
+                                                reject("Error and rolling back failed: task updated(yes) -> user updated(no) -> task rollback(no) ");
+                                                return;
+                                            }else{
+                                                reject("Error but luckly rollback done: task updated(yes) -> user updated(no) -> task rollback(yes)");
+                                                return;
+                                            }
+                                        })
+                                    })
+                                }
+                            })
+                        }else{
+                            // candidate is not in data.candidates
+                            reject("Error: Candidate have to apply first, then you can make the offer.")
+                        }
+                    }else{
+                        // task is already offered
+                        reject("Error: Task is already offered to some applicant!");
+                    }
+                }
+            }
+        })
+    });
+
+    
+    
+}
+
+
+module.exports.offerTask_old = (taskId, owner_user_id, candidate_user_id) =>{ // Offer task as an owner (cannot offer to self)
+    return new Promise((resolve, reject) =>{
+        Task.findById({"_id" : taskId}, (err, data) =>{
+            if(err){reject(err);}
+            else{
+                if(data.user_id != owner_user_id){
+                    reject("Error: You're not the owner of the task! You cannot offer this task to anyone!");
+                }else{
+                    if(data.state == 2){
+                        reject("Error: Task is already offered to some applicant!");
+                        return;
+                    }
+
+                    if(data.candidate_hired == undefined || data.candidate_hired == null || data.candidate_hired ==""){
+                        if(lib.arrayContains(data.candidates, candidate_user_id)){
+                            // task not offered, candidate is in data.candidats, then can hire
+                          
+                            data.candidate_hired = candidate_user_id;
+                            data.state = 2; //The task moves towards the next state, now considered 2 - candidate accepted offer
                             data.save((err, data) =>{
                                 if(err){ reject(err); }
                                 else { resolve(data); }
@@ -173,14 +255,13 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                         }
                     }else{
                         // task is already offered
-                        reject("Error: Task is already offered to someone, you cannot offer same task to others!")
+                        reject("Error: Task is already offered to some applicant!");
                     }
                 }
             }
         })
     });
 }
-
 
 module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as a candidate (cannot offer to self)
     return new Promise((resolve, reject) =>{
@@ -189,6 +270,11 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
             if(err){
                 reject(err)
             }else{
+                if(data.state != 0){
+                    /** task is locked because owner hired someother, or suspended by admin */
+                    reject("Task is not applicable now, either taken or suspended");
+                    return;
+                }
                 if(data.user_id == candidate_user_id){
                     reject("Error: You cannot apply your own task!")
                 }else{
@@ -197,7 +283,7 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                         resolve(data);
                         return;
                     }else{
-
+                        
                         console.log("not yet a candidate, need to push candidate_user_id. .....")
                         data.candidates.push(candidate_user_id);
                         data.save((err, ndata) =>{
