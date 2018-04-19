@@ -333,7 +333,7 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
 }
 
 
-module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ // Apply to a task as a candidate (cannot offer to self)
+module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ //user_id is owner Apply to a task as a candidate (cannot offer to self)
     return new Promise((resolve, reject) =>{
         Task.findById({"_id":taskId}, (err, data) => {
             if(err){
@@ -363,7 +363,7 @@ module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ // Apply to a t
                         if(err) { reject(err); }
                         else { 
                             /** now update user doc */
-                            User.setCompleted(candidate_user_id, taskId, data.price).then(udata =>{
+                            User.setCompleted(data['candidate_hired'], taskId, data.price).then(udata =>{
                                 resolve(ndata); 
                             }).catch(uerr =>{
                                 console.log('[TransactionFailure] ###' + uerr);
