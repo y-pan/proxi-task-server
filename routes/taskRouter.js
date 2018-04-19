@@ -132,7 +132,7 @@ taskRouter.get('/search', (req, res) => {
 });
 
 taskRouter.get('/complete/:taskId', (req,res) =>{
-   
+    let taskId = req.params.taskId;
     Task.ownerConfirmTaskCompleted(taskId, req.decodedToken.user_id).then(data =>{
         res.json({data:data});
     }).catch(err =>{
