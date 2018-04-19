@@ -82,12 +82,19 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
 
 
 /** helper method */
-module.exports.syncList = (user_id, taskId, attName) =>{
+module.exports.syncList = (user_id, taskId, attName, money) =>{
     return new Promise((resolve, reject)=>{
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err){reject(err);}
             else if(!data){ reject("No such user"); }
             else{
+                if(money && money > 0){
+                    if(data['money'] === undefined){
+                        data['money'] = money;
+                    }else{
+                        data['money'] += money;
+                    }
+                }
                 /** get user, update user.taskHired */
                 if(!data[attName]){data[attName] = []; /*in case of empty attribute */}
                 if( data[attName].indexOf(taskId) > 0){
@@ -111,16 +118,34 @@ module.exports.syncList = (user_id, taskId, attName) =>{
     });
 }
 
+module.exports.checkMoneyEnough = (user_id, money) => {
+    return new Promise((resolve, reject)=>{
+        User.findOne({user_id:user_id}, (err, data)=>{
+            if(err || !data){
+                reject("User not found");
+            }else{
+                if(!data.money || data.money < money){
+                    reject("Not enough money!");
+                }else{
+                    resolve("Money enough.")
+                }
+            }
+        })
+    });
+}
+module.exports.setCompleted = (user_id, taskId, money) =>{
+    return User.syncList(user_id, taskId, "taskCompleted", money);
+}
 /** triggered by Task.applyTask */
 module.exports.setApplied = (user_id, taskId) =>{
-    return User.syncList(user_id, taskId, "taskApplied");
+    return User.syncList(user_id, taskId, "taskApplied", null);
 }
-module.exports.setCreated = (user_id, taskId) =>{
-    return User.syncList(user_id, taskId, "taskCreated");
+module.exports.setCreated = (user_id, taskId, money) =>{ /** money will always be added, so here incomming money should be negative */
+    return User.syncList(user_id, taskId, "taskCreated", money);
 }
 /** triggered by Task.offerTask */
 module.exports.setHired = (user_id, taskId) =>{
-    return User.syncList(user_id, taskId, "taskHired");
+    return User.syncList(user_id, taskId, "taskHired", null);
 }
 
 module.exports.updateUser = (infoJson) => {

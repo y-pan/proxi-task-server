@@ -45,13 +45,8 @@ const TaskSchema = mongoose.Schema({
     /* state -
         0: task just get created by owner,
             users(not owner) login & apply task, and user's uid will be added to "candidates" array, so owner can see(firebase need to notify owner about new candidate). 
-        1: owner maked job offer a candidate(candate need to login & apply it first, then owner can provide offer to 1 candidate), 
-        2: candidate accepted offer => "candidate_hired" get populated (firebase notify owner for offer accepted), task will get locked (stop receiving new candidates)
-                                     owner's points (price of task)
-           if a candidate rejects offer, state change back to 0 (firebase notify owner).   
-           owner can cancel offer before it is accepted by candidate (firebase notify .
-        3: candidate claims task completed  => candidate press "complete" button, firebase notifys owner task completion
-            if candidate didn't complete task (abort), state change back to 0 (firebase notify owner)
+        2: owner offer job to a candidate, who will be hired
+        
         4: owner confirms task completed => points get transferred from owner to candidate. Task closed
             if owner claims task not completed, state change to -4 (admin person will get involved for dispute)
         -1: admin person terminates/suspends task (firebase notify owner)
@@ -104,18 +99,27 @@ module.exports.findAll_p = () =>{ //Query for all tasks in the database
 
 module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
     return new Promise((resolve, reject) => {
-        newTask.save((err,data)=>{
-            if(err){
-                reject(err)
-            }else{
-                User.setCreated(data.user_id, data._id).then(udata =>{
-                    resolve(data)
-                }).catch(err => {
-                    console.log("[TransactionError] didn't sync up user.taskCreated");
-                    reject("[TransactionError] didn't sync up user.taskCreated");
-                })
-            }
+
+        // check if user has money to create task, need to deduct task.price from user account
+        User.checkMoneyEnough(data.user_id, newTask.price).then(_udata =>{
+            console.log(_udata);
+            newTask.save((err,data)=>{
+                if(err){
+                    reject(err)
+                }else{
+                    User.setCreated(data.user_id, data._id, (0 - data.price)).then(udata =>{
+                        resolve(data)
+                    }).catch(err => {
+                        console.log("[TransactionError] didn't sync up user.taskCreated");
+                        reject("[TransactionError] didn't sync up user.taskCreated");
+                    })
+                }
+            })
+
+        }).catch(err => {
+            reject(err);
         })
+        
     });
 };
 
@@ -177,7 +181,7 @@ module.exports.updateTask_p = (newTask) =>{ //Find a specific task and update it
     });
 };
 
-/** use promise.all */
+
 module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Offer task as an owner (cannot offer to self)
     return new Promise((resolve, reject) =>{
         Task.findById({"_id" : taskId}, (err, data) =>{
@@ -320,6 +324,53 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                         })
 
                     }
+                }
+            }
+        });
+       
+    });
+}
+
+
+module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ // Apply to a task as a candidate (cannot offer to self)
+    return new Promise((resolve, reject) =>{
+        Task.findById({"_id":taskId}, (err, data) => {
+            if(err){
+                reject(err)
+            }else{
+                if(data.user_id != user_id){
+                    reject("You are not the owner of the task!");
+                    return;
+                }
+                if(data.state == 4){
+                    /** task is locked because owner hired someother, or suspended by admin */
+                    resolve("Task is already confirmed completed!");
+                    return;
+                }
+                if(data.state != 2 || data['candidate_hired'] == "" || !data['candidate_hired']){
+                    /** task is locked because owner hired someother, or suspended by admin */
+                    reject("Task was not offered to any candidaate yet!");
+                    return;
+                }
+
+                if(data.user_id == candidate_user_id){
+                    reject("Error: You cannot apply your own task!")
+                }else{
+                    data['state'] = 4;
+                    if(!data.price || data.price <= 0){data.price = 1;}
+                    data.save((err, ndata) =>{
+                        if(err) { reject(err); }
+                        else { 
+                            /** now update user doc */
+                            User.setCompleted(candidate_user_id, taskId, data.price).then(udata =>{
+                                resolve(ndata); 
+                            }).catch(uerr =>{
+                                console.log('[TransactionFailure] ###' + uerr);
+                                reject('[TransactionFailure] ###' + uerr);
+                            })
+                            
+                        }
+                    })
                 }
             }
         });

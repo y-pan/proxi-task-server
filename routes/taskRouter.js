@@ -30,6 +30,7 @@ taskRouter.post('/add', (req, res) => {
     let taskJson = req.body; /** so all attribute from req.body will be accepted for now for simple, and user_id and user_email are from idToken*/
     taskJson.user_id = user_id;
     taskJson.user_email = user_email;
+    taskJson.price =  taskJson.price || 1;
 
     let newTask = new Task(taskJson);
     // some exception prevention here -----------
@@ -126,6 +127,14 @@ taskRouter.get('/search', (req, res) => {
         })
 });
 
+taskRouter.get('/complete/:taskId', (req,res) =>{
+   
+    Task.ownerConfirmTaskCompleted(taskId, req.decodedToken.user_id).then(data =>{
+        res.json({data:data});
+    }).catch(err =>{
+        res.json({err:err});
+    })
+})  
 taskRouter.get('/search_not_in_use', (req, res) => {
 
     let lat = req.query.lat;
