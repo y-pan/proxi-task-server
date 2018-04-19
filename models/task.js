@@ -175,8 +175,8 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                     }
                     /** now before changes, make a backup in case of rolling back */
                     const taskJsonBackup = JSON.parse(JSON.stringify(data))
-                    console.log("## taskJsonBackup=>")
-                    console.log(taskJsonBackup)
+                    // console.log("## taskJsonBackup=>")
+                    // console.log(taskJsonBackup)
                     if(data.candidate_hired == undefined || data.candidate_hired == null || data.candidate_hired ==""){
                         if(lib.arrayContains(data.candidates, candidate_user_id)){
                             // task not offered, candidate is in data.candidats, then can hire
@@ -184,12 +184,15 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                             data.state = 2; //The task moves towards the next state, now considered 2 - candidate accepted offer
                             
                             data.save((err, updatedTask) =>{
+                                let temp  = updatedTask;
                                 if(err || !updatedTask){ 
                                     reject("Error: failed to update task");
                                     return;
                                 } else { 
-                                    console.log("## taskPromise OK, now update user doc...")
+                                    // console.log("## taskPromise OK, now update user doc...")
                                     User.setHired(candidate_user_id, taskId).then(ud=>{
+                                        console.log("why no obj? ")
+                                        console.log(updatedTask)
                                         resolve(updatedTask);/** yes, the task */
                                         return;
                                     }).catch(ue =>{
@@ -285,8 +288,6 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                         resolve(data);
                         return;
                     }else{
-                        
-                        console.log("not yet a candidate, need to push candidate_user_id. .....")
                         data.candidates.push(candidate_user_id);
                         data.save((err, ndata) =>{
                             if(err) { reject(err); }
@@ -306,13 +307,7 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                 }
             }
         });
-        // Task.findOneAndUpdate([{"_id":taskId},{"user_id":{$not:candidate_user_id}}], {$push:{candidates:candidate_user_id}},{new: true},(err, data)=>{
-        //     if(err){
-        //         reject(err);
-        //     }else{
-        //         resolve(data);
-        //     }
-        // } );
+       
     });
 }
 

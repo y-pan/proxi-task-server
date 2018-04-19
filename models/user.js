@@ -91,17 +91,16 @@ module.exports.setApplied = (user_id, taskId) =>{
                 if(!data[attName]){data[attName] = []; /*in case of empty attribute */}
                 if( data[attName].indexOf(taskId) > 0){
                     // already hired, don't re-hire again
-                    console.log("## User.setHired done: User was already hired!");
+                    // console.log("## User.setHired done: User was already hired!");
                     resolve("User was already hired!");
                 }else{
                     data[attName].push(taskId);
                     data.save((err, _data) =>{
                         if(err || !_data){
-                            console.log(err)
                             console.log("## User.setHired done: Unknow error, no data returned")
                             reject("## User.setHired done: Unknow error");
                         }else{
-                            console.log("## User.setHired done: Updated user to be hired successfuly!");
+                            // console.log("## User.setHired done: Updated user to be hired successfuly!");
                             resolve("Updated user to be hired successfuly!");
                         }
                     })
@@ -121,7 +120,7 @@ module.exports.setHired = (user_id, taskId) =>{
                 /** get user, update user.taskHired */
                 if( data.taskHired.indexOf(taskId) > 0){
                     // already hired, don't re-hire again
-                    console.log("## User.setHired done: User was already hired!");
+                    // console.log("## User.setHired done: User was already hired!");
                     resolve("User was already hired!");
                 }else{
                     data.taskHired.push(taskId);
@@ -131,7 +130,7 @@ module.exports.setHired = (user_id, taskId) =>{
                             console.log("## User.setHired done: Unknow error, no data returned")
                             reject("## User.setHired done: Unknow error");
                         }else{
-                            console.log("## User.setHired done: Updated user to be hired successfuly!");
+                            // console.log("## User.setHired done: Updated user to be hired successfuly!");
                             resolve("Updated user to be hired successfuly!");
                         }
                     })
