@@ -121,11 +121,18 @@ module.exports.syncList = (user_id, taskId, attName, money) =>{
 
 module.exports.checkMoneyEnough = (user_id, money) => {
     return new Promise((resolve, reject)=>{
+        console.log("checkMoneyEnough...")
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err || !data){
+                console.log("checkMoneyEnough -> err || !data...")
                 reject("User not found");
             }else{
-                if(!data.money || data.money < money){
+                console.log("get user:")
+                console.log(data)
+                
+                if(!data.money || data.money-0 < money-0){
+                    console.log("checkMoneyEnough -> Not enough money");
+
                     reject("Not enough money!");
                 }else{
                     resolve("Money enough.")
