@@ -184,12 +184,12 @@ taskRouter.post('/apply', (req, res) => {
 
 // 1.6 POST owner hire one of candidates
 taskRouter.post('/offer', (req, res) => {
-    console.log('do hire......');
+    // console.log('do hire......');
     let taskId =req.body.taskId;
     let candidate_user_id = req.body.candidate_user_id;
     let owner_user_id = req.decodedToken.user_id
     Task.offerTask(taskId, owner_user_id, candidate_user_id).then(data => {
-        res.json({data:data[0]}); /** this data is from Promise.all(), which means it is an array resolved data from sub-promises accordingly */
+        res.json({data:data});
     }).catch(err => {
         res.json({err:err});
     })

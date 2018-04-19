@@ -191,8 +191,8 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                                 } else { 
                                     // console.log("## taskPromise OK, now update user doc...")
                                     User.setHired(candidate_user_id, taskId).then(ud=>{
-                                        console.log("why no obj? ")
-                                        console.log(updatedTask)
+                                        // console.log("why no obj? ")
+                                        // console.log(updatedTask)
                                         resolve(updatedTask);/** yes, the task */
                                         return;
                                     }).catch(ue =>{
@@ -226,8 +226,6 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
         })
     });
 
-    
-    
 }
 
 
