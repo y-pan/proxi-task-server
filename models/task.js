@@ -145,9 +145,22 @@ module.exports.getTasksByUserId_p = (user_id)=>{ //Find all tasks hosted by a sp
         });
     });
 };
+
 module.exports.getTasksByCandidateId_p = (user_id)=>{ //Find all tasks in which a user_id is a candidate
+    /** only currently applying with state==0, task not assigned to anyone yet */
     return new Promise((resolve,reject) =>{
-        Task.find({candidates:user_id}, (err,data)=>{
+        Task.find({candidates:user_id, state:0}, (err,data)=>{
+            if(err) reject(err);
+            resolve(data);
+        });
+    });
+};
+
+// get task that I am hired
+module.exports.getTasksHired_p = (user_id)=>{  //Find all tasks that are completed by a specific user_id
+    /** only currently hired with state==2, task not completed */
+    return new Promise((resolve,reject) =>{
+        Task.find({candidate_hired:user_id, state:2}, (err,data)=>{
             if(err) reject(err);
             resolve(data);
         });
@@ -156,7 +169,7 @@ module.exports.getTasksByCandidateId_p = (user_id)=>{ //Find all tasks in which 
 
 // get task that are completed
 module.exports.getTasksCompleted_p = (user_id)=>{  //Find all tasks that are completed by a specific user_id
-    console.log("user_id: " + user_id);
+    /** only finally completed with state==4, task is finally completed */
     return new Promise((resolve,reject) =>{
         Task.find({candidate_hired:user_id, state:4}, (err,data)=>{
             if(err) reject(err);
@@ -213,7 +226,7 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                                     return;
                                 } else { 
                                     // console.log("## taskPromise OK, now update user doc...")
-                                    User.setHired(candidate_user_id, taskId).then(ud=>{
+                                    User.setHired(candidate_user_id, taskId, updatedTask.state).then(ud=>{
                                         // console.log("why no obj? ")
                                         // console.log(updatedTask)
                                         resolve(updatedTask);/** yes, the task */
@@ -314,7 +327,7 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                             if(err) { reject(err); }
                             else { 
                                 /** now update user doc */
-                                User.setApplied(candidate_user_id, taskId).then(udata =>{
+                                User.setApplied(candidate_user_id, taskId, ndata.state).then(udata =>{
                                     resolve(ndata); 
                                 }).catch(uerr =>{
                                     console.log('[TransactionFailure] ###when updating user for taskApplied, need to attempt to sync later');
@@ -362,7 +375,7 @@ module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ //user_id is ow
                         if(err) { reject(err); }
                         else { 
                             /** now update user doc */
-                            User.setCompleted(data['candidate_hired'], taskId, data.price).then(udata =>{
+                            User.setCompleted(data['candidate_hired'], taskId, data.price, ndata.state).then(udata =>{
                                 resolve(ndata); 
                             }).catch(uerr =>{
                                 console.log('[TransactionFailure] ###' + uerr);

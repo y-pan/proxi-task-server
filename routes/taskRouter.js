@@ -79,19 +79,29 @@ taskRouter.get('/testall',(req,res)=>{ /** this is only for debugging purpose, a
 });
 // 1.3 GET: [api-root]/mycreated       my created task 
 taskRouter.get('/mycreated', (req, res) => {
-    // here  user_id is task-owner's user_id
+    /** those tasks that I created */
     Task.getTasksByUserId_p(req.decodedToken.user_id)
                 .catch((err) =>{ res.json({"err":err}); return;})
                 .then((data)=>{ res.json({"data":data}); return;})
 });
+
 // 1.9 GET: myapplied   my applied task
 taskRouter.get('/myapplied', (req, res) => {
+    /** those tasks that I applied, and task still available, owner hasn't assigned it to anyone yet */
     Task.getTasksByCandidateId_p(req.decodedToken.user_id)
+                .catch((err) =>{ res.json({"err":err}); return;})
+                .then((data)=>{ res.json({"data":data}); return;})
+});
+
+taskRouter.get('/myhired', (req, res) => { 
+    /** those tasks that I get hired, being a worker, but not completed */
+    Task.getTasksHired_p(req.decodedToken.user_id)
                 .catch((err) =>{ res.json({"err":err}); return;})
                 .then((data)=>{ res.json({"data":data}); return;})
 });
 // 2.0 GET: my completed
 taskRouter.get('/mycompleted', (req, res) => {
+    /** those tasks that I completed (as a worker) */
     Task.getTasksCompleted_p(req.decodedToken.user_id)
                 .catch((err) =>{ res.json({"err":err}); return;})
                 .then((data)=>{ res.json({"data":data}); return;})

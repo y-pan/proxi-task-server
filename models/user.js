@@ -82,14 +82,33 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
 
 
 /** helper method */
-module.exports.syncList = (user_id, taskId, attName, money) =>{
+module.exports.syncList = (user_id, taskId, newList, money, latestTaskState) =>{
+    /**latestTaskState is the task after updated */
     return new Promise((resolve, reject)=>{
         console.log("do user.syncList")
+        // set prevList, newList according to latestTaskState
+        let prevList = null; let newList = null;
+        switch(latestTaskState){
+            case 0:
+                prevList = null; 
+                newList = "taskApplied";
+                break;
+            case 2:
+                prevList = "taskApplied"; 
+                newList = "taskHired";
+                break;
+            case 4:
+                prevList = "taskHired"; 
+                newList = "taskCompleted";
+                break;
+            default:
+                reject("Couldn't proceed due to invalid taskState: " + latestTaskState);
+                break;
+        }
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err){reject(err);}
             else if(!data){ reject("No such user"); }
             else{
-
                 if(money){
                     if(data['money'] === undefined){
                         data['money'] = money;
@@ -99,20 +118,31 @@ module.exports.syncList = (user_id, taskId, attName, money) =>{
                 }
 
                 /** get user, update user.taskHired */
-                if(!data[attName]){data[attName] = []; /*in case of empty attribute */}
-                if( data[attName].indexOf(taskId) > 0){
+                if(!data[newList]){data[newList] = []; /*in case of empty attribute */}
+                if( data[newList].indexOf(taskId) >-1){
                     // already hired, don't re-hire again
                     // console.log("## User.setHired done: User was already hired!");
-                    resolve("User."+attName+" has the task in place!");
+                    resolve("User."+newList+" has the task in place!");
                 }else{
-                    data[attName].push(taskId);
+                    /** see if we need to remove from prevList */
+                    if(latestTaskState == 0){
+                        /** it is just applying, no prevList, no removing */
+                    }else{
+                        /** now need to remove from prevList */
+                        var _index_in_prevList = data[prevList].indexOf(taskId);
+                        if( _index_in_prevList> -1){
+                            data[prevList].splice(_index_in_prevList, 1);
+                        }
+                    }
+                    
+                    data[newList].push(taskId);
                     data.save((err, _data) =>{
                         if(err || !_data){
-                            console.log("## Error when syncing user."+attName);
+                            console.log("## Error when syncing user."+newList);
                             reject("## User.setHired done: Unknow error");
                         }else{
                             // console.log("## User.setHired done: Updated user to be hired successfuly!");
-                            resolve("Synced user." + attName + " successfuly!");
+                            resolve("Synced user." + newList + " successfuly!");
                         }
                     })
                 }
@@ -143,19 +173,20 @@ module.exports.checkMoneyEnough = (user_id, money) => {
         })
     });
 }
-module.exports.setCompleted = (user_id, taskId, money) =>{
-    return User.syncList(user_id, taskId, "taskCompleted", money);
+module.exports.setCompleted = (user_id, taskId, money, latestTaskState) =>{
+    /**user_id, taskId, attName, money, latestTaskState */
+    return User.syncList(user_id, taskId, "taskCompleted", money, latestTaskState);
 }
 /** triggered by Task.applyTask */
-module.exports.setApplied = (user_id, taskId) =>{
-    return User.syncList(user_id, taskId, "taskApplied", null);
+module.exports.setApplied = (user_id, taskId, latestTaskState) =>{
+    return User.syncList(user_id, taskId, "taskApplied", null, latestTaskState);
 }
 module.exports.setCreated = (user_id, taskId, money) =>{ /** money will always be added, so here incomming money should be negative */
-    return User.syncList(user_id, taskId, "taskCreated", money);
+    return User.syncList(user_id, taskId, "taskCreated", money, null);
 }
 /** triggered by Task.offerTask */
-module.exports.setHired = (user_id, taskId) =>{
-    return User.syncList(user_id, taskId, "taskHired", null);
+module.exports.setHired = (user_id, taskId, latestTaskState) =>{
+    return User.syncList(user_id, taskId, "taskHired", null, latestTaskState);
 }
 
 module.exports.updateUser = (infoJson) => {
