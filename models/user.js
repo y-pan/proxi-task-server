@@ -20,6 +20,7 @@ const UserSchema = mongoose.Schema({
 
     ,money:{type:Number, default:50}
     ,count:{type:Number, default:0}
+
 },{collection:'user'});
 
 const User = module.exports = mongoose.model('user',UserSchema); // creates variables for user schema
@@ -95,7 +96,7 @@ module.exports.setApplied = (user_id, taskId) =>{
                 }else{
                     data[attName].push(taskId);
                     data.save((err, _data) =>{
-                        if(!err || !_data){
+                        if(err || !_data){
                             console.log(err)
                             console.log("## User.setHired done: Unknow error, no data returned")
                             reject("## User.setHired done: Unknow error");
@@ -125,7 +126,7 @@ module.exports.setHired = (user_id, taskId) =>{
                 }else{
                     data.taskHired.push(taskId);
                     data.save((err, _data) =>{
-                        if(!err || !_data){
+                        if(err || !_data){
                             console.log(err)
                             console.log("## User.setHired done: Unknow error, no data returned")
                             reject("## User.setHired done: Unknow error");
