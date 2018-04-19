@@ -354,7 +354,7 @@ module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ // Apply to a t
                     return;
                 }
 
-                if(data.user_id == candidate_user_id){
+                if(data.user_id == data['candidate_hired']){
                     reject("Error: You cannot apply your own task!")
                 }else{
                     data['state'] = 4;
