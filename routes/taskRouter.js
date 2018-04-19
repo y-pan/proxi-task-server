@@ -30,6 +30,7 @@ taskRouter.post('/add', (req, res) => {
     let taskJson = req.body; /** so all attribute from req.body will be accepted for now for simple, and user_id and user_email are from idToken*/
     taskJson.user_id = user_id;
     taskJson.user_email = user_email;
+
     let newTask = new Task(taskJson);
     // some exception prevention here -----------
     if(!lib.validateTask(newTask)) {

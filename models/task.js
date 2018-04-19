@@ -193,18 +193,20 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                                         resolve(updatedTask);/** yes, the task */
                                         return;
                                     }).catch(ue =>{
+                                        console.log('[TransactionFailure] ###when updating user for hiredTask, need to attempt to sync later');
+                                        reject('[TransactionFailure] ###when updating user for hiredTask, need to attempt to sync later')
                                         /**what if user didn't get updated? roll back using _old_data */
-                                        data.candidate_hired = taskJsonBackup.candidate_hired;
-                                        data.state = taskJsonBackup.state
-                                        data.save((err, __data)=>{
-                                            if(err || !__data){
-                                                reject("Error and rolling back failed: task updated(yes) -> user updated(no) -> task rollback(no) ");
-                                                return;
-                                            }else{
-                                                reject("Error but luckly rollback done: task updated(yes) -> user updated(no) -> task rollback(yes)");
-                                                return;
-                                            }
-                                        })
+                                        // data.candidate_hired = taskJsonBackup.candidate_hired;
+                                        // data.state = taskJsonBackup.state;
+                                        // data.save((err, __data)=>{
+                                        //     if(err || !__data){
+                                        //         reject("Error and rolling back failed: task updated(yes) -> user updated(no) -> task rollback(no) ");
+                                        //         return;
+                                        //     }else{
+                                        //         reject("Error but luckly rollback done: task updated(yes) -> user updated(no) -> task rollback(yes)");
+                                        //         return;
+                                        //     }
+                                        // })
                                     })
                                 }
                             })
@@ -288,17 +290,18 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                         data.candidates.push(candidate_user_id);
                         data.save((err, ndata) =>{
                             if(err) { reject(err); }
-                            else { resolve(ndata); }
+                            else { 
+                                /** now update user doc */
+                                User.setApplied(candidate_user_id, taskId).then(udata =>{
+                                    resolve(ndata); 
+                                }).catch(uerr =>{
+                                    console.log('[TransactionFailure] ###when updating user for taskApplied, need to attempt to sync later');
+                                    reject('[TransactionFailure] ###when updating user for taskApplied, need to attempt to sync later')
+                                })
+                                
+                            }
                         })
-                        // let _id = data._id;
-                        // delete data._id;
-                        // Task.findOneAndUpdate({"_id":_id}, data,{new: true}, (err, ndata) => {
-                        //     if(err){
-                        //         reject(err);
-                        //     }else{
-                        //         resolve(ndata);
-                        //     }
-                        // })
+
                     }
                 }
             }

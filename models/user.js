@@ -78,6 +78,39 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
     });
 };
 
+
+module.exports.setApplied = (user_id, taskId) =>{
+    return new Promise((resolve, reject)=>{
+        let attName = "taskApplied";
+        User.findOne({user_id:user_id}, (err, data)=>{
+            if(err){reject(err);}
+            else if(!data){ reject("No such user"); }
+            else{
+                /** get user, update user.taskHired */
+                if(!data[attName]){data[attName] = []; /*in case of empty attribute */}
+                if( data[attName].indexOf(taskId) > 0){
+                    // already hired, don't re-hire again
+                    console.log("## User.setHired done: User was already hired!");
+                    resolve("User was already hired!");
+                }else{
+                    data[attName].push(taskId);
+                    data.save((err, _data) =>{
+                        if(!err || !_data){
+                            console.log(err)
+                            console.log("## User.setHired done: Unknow error, no data returned")
+                            reject("## User.setHired done: Unknow error");
+                        }else{
+                            console.log("## User.setHired done: Updated user to be hired successfuly!");
+                            resolve("Updated user to be hired successfuly!");
+                        }
+                    })
+                }
+            }
+        })
+    });
+}
+
+
 module.exports.setHired = (user_id, taskId) =>{
     return new Promise((resolve, reject)=>{
         User.findOne({user_id:user_id}, (err, data)=>{
