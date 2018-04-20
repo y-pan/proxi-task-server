@@ -188,7 +188,8 @@ module.exports.setApplied = (user_id, taskId, latestTaskState) =>{
 module.exports.setCreated = (user_id, taskId, money) =>{ /** money will always be added, so here incomming money should be negative */
     // User.setCreated(data.user_id, data._id, (0 - data.price)) 
     console.log("### User.setCreated => "+ user_id + " | " + taskId + " | " + money);
-    return User.syncList(user_id, taskId, "taskCreated", money, null, 0);
+    return User.syncList(user_id, taskId, "taskCreated", money, 0);
+    //                  (user_id, taskId, newList,       money, latestTaskState)
 }
 /** triggered by Task.offerTask */
 module.exports.setHired = (user_id, taskId, latestTaskState) =>{
