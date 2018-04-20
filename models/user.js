@@ -83,6 +83,9 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
 
 /** helper method */
 module.exports.syncList = (user_id, taskId, newList, money, latestTaskState) =>{
+    console.log("### User.syncList(user_id, taskId, newList, money, latestTaskState) => "
+                                + user_id + " | " + taskId + " | " + newList + "| "+ money);
+
     /**latestTaskState is the task after updated */
     return new Promise((resolve, reject)=>{
         console.log("do user.syncList")
@@ -102,6 +105,7 @@ module.exports.syncList = (user_id, taskId, newList, money, latestTaskState) =>{
                 newList = "taskCompleted";
                 break;
             default:
+                console.log("Couldn't proceed due to invalid taskState: " + latestTaskState);
                 reject("Couldn't proceed due to invalid taskState: " + latestTaskState);
                 break;
         }
@@ -182,7 +186,9 @@ module.exports.setApplied = (user_id, taskId, latestTaskState) =>{
     return User.syncList(user_id, taskId, "taskApplied", null, latestTaskState);
 }
 module.exports.setCreated = (user_id, taskId, money) =>{ /** money will always be added, so here incomming money should be negative */
-    return User.syncList(user_id, taskId, "taskCreated", money, null);
+    // User.setCreated(data.user_id, data._id, (0 - data.price)) 
+    console.log("### User.setCreated => "+ user_id + " | " + taskId + " | " + money);
+    return User.syncList(user_id, taskId, "taskCreated", money, null, 0);
 }
 /** triggered by Task.offerTask */
 module.exports.setHired = (user_id, taskId, latestTaskState) =>{
