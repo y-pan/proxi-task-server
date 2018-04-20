@@ -82,33 +82,44 @@ module.exports.getUserByUserId_p = (user_id)=>{ /** user_id is the same one from
 
 
 /** helper method */
-module.exports.syncList = (user_id, taskId, newList, money, latestTaskState) =>{
+module.exports.syncList = (user_id, taskId, _newList, money, latestTaskState) =>{
     console.log("### User.syncList(user_id, taskId, newList, money, latestTaskState) => "
-                                + user_id + " | " + taskId + " | " + newList + "| "+ money);
+                                + user_id + " | " + taskId + " | " + _newList + "| "+ money);
 
     /**latestTaskState is the task after updated */
     return new Promise((resolve, reject)=>{
         console.log("do user.syncList")
         // set prevList, newList according to latestTaskState
         let prevList = null; let newList = null;
-        switch(latestTaskState){
-            case 0:
-                prevList = null; 
-                newList = "taskApplied";
-                break;
-            case 2:
-                prevList = "taskApplied"; 
-                newList = "taskHired";
-                break;
-            case 4:
-                prevList = "taskHired"; 
-                newList = "taskCompleted";
-                break;
-            default:
-                console.log("Couldn't proceed due to invalid taskState: " + latestTaskState);
-                reject("Couldn't proceed due to invalid taskState: " + latestTaskState);
-                break;
+
+        if(_newList != null && _newList != "" ){
+            // then do let latestTaskState determine list. For User.setCreate, and latestTaskState is always 0
+            latestTaskState = 0;
+            newList = _newList;
+        }else{
+            // then let latestTaskState determine list, when incomming param _newList == null
+            switch(latestTaskState){
+                case 0:
+                    prevList = null; 
+                    newList = "taskApplied";
+                    break;
+                case 2:
+                    prevList = "taskApplied"; 
+                    newList = "taskHired";
+                    break;
+                case 4:
+                    prevList = "taskHired"; 
+                    newList = "taskCompleted";
+                    break;
+                default:
+                    console.log("Couldn't proceed due to invalid taskState: " + latestTaskState);
+                    reject("Couldn't proceed due to invalid taskState: " + latestTaskState);
+                    break;
+            }
         }
+
+
+        
         User.findOne({user_id:user_id}, (err, data)=>{
             if(err){reject(err);}
             else if(!data){ reject("No such user"); }
@@ -179,11 +190,11 @@ module.exports.checkMoneyEnough = (user_id, money) => {
 }
 module.exports.setCompleted = (user_id, taskId, money, latestTaskState) =>{
     /**user_id, taskId, attName, money, latestTaskState */
-    return User.syncList(user_id, taskId, "taskCompleted", money, latestTaskState);
+    return User.syncList(user_id, taskId, null, money, latestTaskState);
 }
 /** triggered by Task.applyTask */
 module.exports.setApplied = (user_id, taskId, latestTaskState) =>{
-    return User.syncList(user_id, taskId, "taskApplied", null, latestTaskState);
+    return User.syncList(user_id, taskId, null, null, latestTaskState);
 }
 module.exports.setCreated = (user_id, taskId, money) =>{ /** money will always be added, so here incomming money should be negative */
     // User.setCreated(data.user_id, data._id, (0 - data.price)) 
@@ -193,7 +204,7 @@ module.exports.setCreated = (user_id, taskId, money) =>{ /** money will always b
 }
 /** triggered by Task.offerTask */
 module.exports.setHired = (user_id, taskId, latestTaskState) =>{
-    return User.syncList(user_id, taskId, "taskHired", null, latestTaskState);
+    return User.syncList(user_id, taskId, null, null, latestTaskState);
 }
 
 module.exports.updateUser = (infoJson) => {
