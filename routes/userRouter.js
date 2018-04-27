@@ -53,6 +53,8 @@ userRouter.post('/update', (req, res) =>{
     infoJson.name = req.body.name;
     infoJson.address = req.body.address;
     infoJson.phone = req.body.phone;
+    infoJson.lat = req.body.lat;
+    infoJson.lon = req.body.lon;
 
     console.log("get other user: "+ infoJson.user_id)
     User.updateUser(infoJson).then((data)=>{

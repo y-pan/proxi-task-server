@@ -12,6 +12,10 @@ const UserSchema = mongoose.Schema({
     ,name:{type:String, default:""}                 /** firebase name, user can reset it */
     ,phone:{type:String, default:""}                /** firebase number, user can reset it */
     ,address:{type:String, default:""}
+    
+    ,lat:{type:Number, default:""} /* Latitude of the user address */
+    ,lon:{type:Number, default:""} /* Longitude of the user address */
+
     ,taskApplied:{type:[String], default:[]}        /** task-ids that I applied  */
     ,taskHired:{type:[String], default:[]}          /** task-ids that I was hired */
     ,taskCompleted:{type:[String], default:[]}      /** task-ids that I've completed  */
@@ -220,9 +224,9 @@ module.exports.updateUser = (infoJson) => {
                     userFound.name = infoJson.name || userFound.name;
                     userFound.phone = infoJson.phone || userFound.phone;
                     userFound.address = infoJson.address || userFound.loc;
-        
+                    userFound.lat = infoJson.lat;
+                    userFound.lon = infoJson.lon;
                     userFound.save((err, _data) =>{
-
                         if(err) {
                             reject(err)
                         }
