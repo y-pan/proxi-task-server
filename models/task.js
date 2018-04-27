@@ -111,8 +111,10 @@ module.exports.addTask_p = (newTask) =>{ //Add a single task to the database
                     User.setCreated(data.user_id, data._id, (0 - data.price)).then(udata =>{
                         resolve(data)
                     }).catch(err => {
-                        console.log("[TransactionError] didn't sync up user.taskCreated");
-                        reject("[TransactionError] didn't sync up user.taskCreated");
+                        console.log("[TransactionErrorInUpdatingUser] didn't sync up user.taskCreated");
+                        // reject("[TransactionErrorInUpdatingUser] didn't sync up user.taskCreated");
+                        resolve(data);
+
                     })
                 }
             })
@@ -232,9 +234,9 @@ module.exports.offerTask = (taskId, owner_user_id, candidate_user_id) =>{ // Off
                                         resolve(updatedTask);/** yes, the task */
                                         return;
                                     }).catch(ue =>{
-                                        console.log('[TransactionFailure] ###when updating user for hiredTask, need to attempt to sync later');
-                                        reject('[TransactionFailure] ###when updating user for hiredTask, need to attempt to sync later')
-                                        /**what if user didn't get updated? roll back using _old_data */
+                                        console.log('[TransactionErrorInUpdatingUser] ###when updating user for hiredTask, need to attempt to sync later');
+                                        // reject('[TransactionErrorInUpdatingUser] ###when updating user for hiredTask, need to attempt to sync later')
+                                        resolve(updatedTask);                                        /**what if user didn't get updated? roll back using _old_data */
                                         // data.candidate_hired = taskJsonBackup.candidate_hired;
                                         // data.state = taskJsonBackup.state;
                                         // data.save((err, __data)=>{
@@ -330,8 +332,9 @@ module.exports.applyTask = (taskId, candidate_user_id) =>{ // Apply to a task as
                                 User.setApplied(candidate_user_id, taskId, ndata.state).then(udata =>{
                                     resolve(ndata); 
                                 }).catch(uerr =>{
-                                    console.log('[TransactionFailure] ###when updating user for taskApplied, need to attempt to sync later');
-                                    reject('[TransactionFailure] ###when updating user for taskApplied, need to attempt to sync later')
+                                    console.log('[TransactionErrorInUpdatingUser] ###when updating user for taskApplied, need to attempt to sync later');
+                                    // reject('[TransactionErrorInUpdatingUser] ###when updating user for taskApplied, need to attempt to sync later')
+                                    resolve(ndata); 
                                 })
                                 
                             }
@@ -378,8 +381,9 @@ module.exports.ownerConfirmTaskCompleted = (taskId, user_id) =>{ //user_id is ow
                             User.setCompleted(data['candidate_hired'], taskId, data.price, ndata.state).then(udata =>{
                                 resolve(ndata); 
                             }).catch(uerr =>{
-                                console.log('[TransactionFailure] ###' + uerr);
-                                reject('[TransactionFailure] ###' + uerr);
+                                console.log('[TransactionErrorInUpdatingUser] ###' + uerr);
+                                // reject('[TransactionErrorInUpdatingUser] ###' + uerr);
+                                resolve(ndata); 
                             })
                             
                         }
